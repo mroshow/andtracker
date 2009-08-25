@@ -50,8 +50,9 @@ public class InviteContactsByEmailActivity extends ExpandableListActivity implem
 
     private final static String TAG = "LiveTracker:InviteContactsByEmailActivity";
     
-    private final String GROUP_NAME = "contactName";
-    private final String CHILD_NAME = "contactEmail";
+    private final String CONTACT_NAME = "contactName";
+    private final String EMAIL_ADDRESS = "contactEmail";
+    private final String EMAIL_ADDRESS_TYPE = "contactEmailType";
 
     public static final int MENU_ITEM_ID_SEND_INVITATION = Menu.FIRST;
     
@@ -69,69 +70,64 @@ public class InviteContactsByEmailActivity extends ExpandableListActivity implem
         
         this.trackingID = getIntent().getStringExtra(EXTRA_TRACKING_ID);
         
-        List<Map<String, String>> groups = new ArrayList<Map<String, String>>();
+        List<Map<String, String>> allContactNamesWithDisplayName = new ArrayList<Map<String, String>>();
         List<List<Map<String, String>>> children = new ArrayList<List<Map<String, String>>>();
-        List<Map<String, String>> childrenForAGroup = new ArrayList<Map<String, String>>();
+        List<Map<String, String>> emailAddressesOfContact = new ArrayList<Map<String, String>>();
 
-        int previousId = -1;
+        int previousPersonId = -1;
         Cursor cursor = getContactCursor(this);
         do {
             int personId = cursor.getInt(cursor.getColumnIndex(Contacts.ContactMethods.PERSON_ID));
 
-            // if this person is already added in list, do not add again but
-            // just add it's information
-            if (personId != previousId) {
-                String personName = cursor.getString(cursor.getColumnIndex(Contacts.ContactMethods.DISPLAY_NAME));
+            // if this person is already added in list, do not add again but just add it's information
+            if (personId != previousPersonId) {
+                Map<String, String> contactNamesWithDisplayName = new HashMap<String, String>();
+                contactNamesWithDisplayName.put(CONTACT_NAME, cursor.getString(cursor.getColumnIndex(Contacts.ContactMethods.DISPLAY_NAME)));
+                allContactNamesWithDisplayName.add(contactNamesWithDisplayName);
 
-                Map<String, String> groupMap = new HashMap<String, String>();
-                groupMap.put(GROUP_NAME, personName);
-                groups.add(groupMap);
-
-                if (previousId != -1) {
-                    children.add(childrenForAGroup);
-                    childrenForAGroup = new ArrayList<Map<String, String>>();
+                if (previousPersonId != -1) {
+                    children.add(emailAddressesOfContact);
+                    emailAddressesOfContact = new ArrayList<Map<String, String>>();
                 }
             }
 
-            int dataKind = cursor.getInt(cursor.getColumnIndex(Contacts.ContactMethods.KIND));
-
-            // Pick only data with id=1 which represents email address
-            if (dataKind == 1) {
-                String personEmail = cursor.getString(cursor.getColumnIndex(Contacts.ContactMethods.DATA));
-
-                Map<String, String> curChildMap = new HashMap<String, String>();
-                curChildMap.put(CHILD_NAME, personEmail);
-                childrenForAGroup.add(curChildMap);
+            int typeOfContactMethod = cursor.getInt(cursor.getColumnIndex(Contacts.ContactMethods.TYPE));
+            int kindOfContactMethod = cursor.getInt(cursor.getColumnIndex(Contacts.ContactMethods.KIND));
+            // kindOfContactMethod: 1 represents email address (no constant found yet where this value is defined)
+            if (kindOfContactMethod == 1) {
+                Map<String, String> emailAddressWithAttributes = new HashMap<String, String>();
+                emailAddressWithAttributes.put(EMAIL_ADDRESS, cursor.getString(cursor.getColumnIndex(Contacts.ContactMethods.DATA)));
+                emailAddressWithAttributes.put(EMAIL_ADDRESS_TYPE, getResources().getTextArray(android.R.array.emailAddressTypes)[typeOfContactMethod - 1].toString());
+                emailAddressesOfContact.add(emailAddressWithAttributes);
             }
 
-            previousId = personId;
+            previousPersonId = personId;
 
         } while (cursor.moveToNext());
 
         // add the last set of children to the children's list
-        children.add(childrenForAGroup);
+        children.add(emailAddressesOfContact);
 
         // find out the indexes of empty children lists and remove them and
         // their respective groups
         List indexes = this.findEmptyChildrenLists(children);
         for (int i = 0; i < indexes.size(); i++) {
-            groups.remove(Integer.parseInt(indexes.get(i).toString()));
+            allContactNamesWithDisplayName.remove(Integer.parseInt(indexes.get(i).toString()));
             children.remove(Integer.parseInt(indexes.get(i).toString()));
         }
 
-        setListAdapter(
-            new SimpleExpandableListAdapter(
+        SimpleExpandableListAdapter adapter = new SimpleExpandableListAdapter(
                 this,
-                groups,
+                allContactNamesWithDisplayName,
                 android.R.layout.simple_expandable_list_item_1,
-                new String[] { GROUP_NAME },
+                new String[] { CONTACT_NAME },
                 new int[] { android.R.id.text1 },
                 children,
-                android.R.layout.simple_list_item_multiple_choice,
-                new String[] { CHILD_NAME },
-                new int[] { android.R.id.text1 }
-            )
+                R.layout.email_list_item,
+                new String[] { EMAIL_ADDRESS_TYPE, EMAIL_ADDRESS },
+                new int[] { android.R.id.text1, android.R.id.text2 }
         );
+        setListAdapter(adapter);
     }
 
     private List findEmptyChildrenLists(List<?> list) {
@@ -154,11 +150,11 @@ public class InviteContactsByEmailActivity extends ExpandableListActivity implem
     @Override
     public boolean onChildClick(android.widget.ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
         // update child view
-        CheckedTextView tempView = (CheckedTextView) v.findViewById(android.R.id.text1);
+        CheckedTextView tempView = (CheckedTextView) v.findViewById(android.R.id.text2);
         tempView.setChecked(!tempView.isChecked());
         
         // update list of selected email addresses
-        String emailAddress = ((TextView) v).getText().toString();
+        String emailAddress = ((TextView) tempView).getText().toString();
         if(tempView.isChecked()) {
             this.selectedEmailAddresses.add(emailAddress);
         }
@@ -175,7 +171,8 @@ public class InviteContactsByEmailActivity extends ExpandableListActivity implem
                 Contacts.ContactMethods.PERSON_ID,
                 Contacts.ContactMethods.DISPLAY_NAME,
                 Contacts.ContactMethods.KIND,
-                Contacts.ContactMethods.DATA 
+                Contacts.ContactMethods.DATA,
+                Contacts.ContactMethods.TYPE
                 };
 
         // select returnColumns of all contacts and sort by display name
