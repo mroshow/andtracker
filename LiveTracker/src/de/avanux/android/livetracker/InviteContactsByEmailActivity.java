@@ -217,7 +217,7 @@ public class InviteContactsByEmailActivity extends ExpandableListActivity implem
             Intent intent = new Intent(Intent.ACTION_SEND);
             intent.putExtra(Intent.EXTRA_EMAIL, (String[]) this.selectedEmailAddresses.toArray(new String[] {}));
             intent.putExtra(Intent.EXTRA_SUBJECT, getText(R.string.mail_subject));
-            intent.putExtra(Intent.EXTRA_TEXT, getText(R.string.mail_body) + " " + Configuration.getServerBaseUrl() + "?id=" + this.trackingID);
+            intent.putExtra(Intent.EXTRA_TEXT, getText(R.string.mail_body) + " " + Configuration.getServerBaseUrl() + "/?trackingID=" + this.trackingID);
             
             /* The "MessageCompose" activity of the default "Email" application
              * uses the following intent filters for action SEND:
