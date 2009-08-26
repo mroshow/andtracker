@@ -174,7 +174,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
             }
         }
         
-        preference.setSummary(timeInterval + " seconds");
+        preference.setSummary(timeInterval + " " + getString(R.string.preference_timeInterval_unit));
     }
 
     private void setDistanceSummary(SharedPreferences sharedPreferences) {
@@ -197,7 +197,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
             }
         }
         
-        preference.setSummary(distance + " meters");
+        preference.setSummary(distance + " " + getString(R.string.preference_distance_unit));
     }
     
     private int getArrayIndex(int arrayID, String value) {

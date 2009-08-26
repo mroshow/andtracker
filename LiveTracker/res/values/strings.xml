@@ -58,10 +58,12 @@
     <string name="preference_timeInterval_key">time_interval</string>
     <string name="preference_timeInterval_title">Time interval</string>
     <string name="preference_timeInterval_dialogTitle">Time interval between locations being sent</string>
+    <string name="preference_timeInterval_unit">seconds</string>
 
     <string name="preference_distance_key">distance</string>
     <string name="preference_distance_title">Distance</string>
     <string name="preference_distance_dialogTitle">Minimum distance between locations being sent</string>
+    <string name="preference_distance_unit">meters</string>
 
     <!-- about activity -->
 

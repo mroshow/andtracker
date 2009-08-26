@@ -45,7 +45,7 @@
 
     <string name="menu_send_invitation">Einladung senden</string>
     <string name="mail_subject">Einladung zur Positionsverfolgung</string>
-    <string name="mail_body">Ich lade Sie hiermit ein, mein Position zu verfolgen unter </string>
+    <string name="mail_body">Ich lade Sie hiermit ein, meine Position zu verfolgen unter </string>
     
     <!-- preferences activity -->
     
@@ -58,10 +58,12 @@
     <string name="preference_timeInterval_key">time_interval</string>
     <string name="preference_timeInterval_title">Zeitinterval</string>
     <string name="preference_timeInterval_dialogTitle">Zeit zwischen zwei Positionsmeldungen</string>
+    <string name="preference_timeInterval_unit">Sekunden</string>
 
     <string name="preference_distance_key">distance</string>
     <string name="preference_distance_title">Positionsänderung</string>
     <string name="preference_distance_dialogTitle">Minimaler Positionsänderung in Metern zwischen zwei Positionsmeldungen</string>
+    <string name="preference_distance_unit">Meter</string>
 
     <!-- about activity -->
 
