@@ -25,17 +25,13 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ComponentName;
-import android.content.ContentUris;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.provider.Contacts.People;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Menu;
@@ -48,9 +44,6 @@ import android.widget.Toast;
 public class LiveTracker extends Activity implements UpdatableDisplay {
 
     private static final String INSTANCE_STATE_SAVED = "INSTANCE_STATE_SAVED";
-
-    private static final String CONFIGURATION_URL2 = "http://miraculix.localnet:8080/LiveTrackerServer/ConfigurationProvider";
-    // private static final String CONFIGURATION_URL = "http://livetracker.dyndns.org/ConfigurationProvider";
 
     private final static String TAG = "LiveTracker:LiveTracker";
 
@@ -84,63 +77,8 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
             Log.d(TAG, "Saved instance state is available - we were probably restarted (e.g. display orientation changed or keypad (de-)activated).");
         }
         
-        this.locationTrackerConnection = new ServiceConnection() {
-            public void onServiceConnected(ComponentName className, IBinder service) {
-                Log.d(TAG, "Connection to location tracker service established.");
-
-                // first of all: make the location tracker available
-                locationTracker = ((LocationTracker.LocationTrackerBinder) service).getService();
-
-                // let the location tracker know where to send display updates
-                locationTracker.setUpdatableDisplay(getUpdatableDisplay());
-
-                if (getConfiguration() == null) {
-                    if(! isInstanceStateSaved()) {
-                        Log.d(TAG, "Location tracker service is not yet configured.");
-                        new DownloadConfigurationTask().execute(Configuration.getServerBaseUrl() + "/ConfigurationProvider");
-                    }
-                    else {
-                        Log.d(TAG, "Location tracker service is not yet configured but no need to try again after restart.");
-                    }
-                } else {
-                    Log.d(TAG, "Location tracker service is already configured.");
-                    updateTrackingID();
-                    updateLocationsSentCount(locationTracker.getLocationsSent());
-                    updateLastLocationSentTime(locationTracker.getLastTimePosted());
-                    updateButtons();
-                }
-            }
-
-            public void onServiceDisconnected(ComponentName className) {
-                locationTracker = null;
-            }
-        };
-
-        
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-    }
-
-    @Override
-    protected void onRestart() {
-        Log.d(TAG, "onRestart was called.");
-        super.onRestart();
-    }
-    
-    @Override
-    protected void onStart() {
-        Log.d(TAG, "onStart was called.");
-        super.onStart();
-        
-        // make preference keys available to configuration
-        Configuration.setTimeIntervalPreferenceKey(getString(R.string.preference_timeInterval_key));
-        Configuration.setDistancePreferenceKey(getString(R.string.preference_distance_key));
-
-        // explicit start of service in order to let it survive an unbind
-        startService(new Intent(LiveTracker.this, LocationTracker.class));
-
-        // bind service after it has been started
-        bindService(new Intent(LiveTracker.this, LocationTracker.class), this.locationTrackerConnection, 0);
 
         Button startButton = (Button) findViewById(R.id.button_start);
         startButton.setOnClickListener(new View.OnClickListener() {
@@ -166,11 +104,70 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
             }
         });
     }
+
+    @Override
+    protected void onRestart() {
+        Log.d(TAG, "onRestart was called.");
+        super.onRestart();
+    }
+    
+    @Override
+    protected void onStart() {
+        Log.d(TAG, "onStart was called.");
+        super.onStart();
+        
+        // make preference keys available to configuration
+        Configuration.setTimeIntervalPreferenceKey(getString(R.string.preference_timeInterval_key));
+        Configuration.setDistancePreferenceKey(getString(R.string.preference_distance_key));
+
+        // establish a service connection regardless of start or restart
+        this.locationTrackerConnection = new ServiceConnection() {
+            public void onServiceConnected(ComponentName className, IBinder service) {
+                Log.d(TAG, "Connection to location tracker service established.");
+
+                // acquire the location tracker
+                locationTracker = ((LocationTracker.LocationTrackerBinder) service).getService();
+
+                // let the location tracker know where to send display updates
+                locationTracker.setUpdatableDisplay(getUpdatableDisplay());
+
+                // make sure the location tracker is configured
+                if (getConfiguration() == null) {
+                    if(! isInstanceStateSaved()) {
+                        Log.d(TAG, "Location tracker service is not yet configured.");
+                        new DownloadConfigurationTask().execute(Configuration.getServerBaseUrl() + "/ConfigurationProvider");
+                    }
+                    else {
+                        Log.d(TAG, "Location tracker service is not yet configured but no need to try again after restart.");
+                    }
+                } else {
+                    Log.d(TAG, "Location tracker service is already configured.");
+                    updateTrackingID();
+                    updateLocationsSentCount(locationTracker.getLocationsSent());
+                    updateLastLocationSentTime(locationTracker.getLastTimePosted());
+                    updateButtons();
+                }
+            }
+
+            public void onServiceDisconnected(ComponentName className) {
+                locationTracker = null;
+            }
+        };
+
+        // explicit start of service in order to let it survive an unbind
+        startService(new Intent(LiveTracker.this, LocationTracker.class));
+
+        // bind service after it has been started
+        bindService(new Intent(LiveTracker.this, LocationTracker.class), this.locationTrackerConnection, 0);
+    }
     
     @Override
     protected void onResume() {
         Log.d(TAG, "onResume was called.");
         super.onResume();
+        
+        // reset restart indicator - the next Pause/Stop/Destroy might be the user terminating the application
+        this.instanceStateSaved = false;
     }
 
     @Override
@@ -183,40 +180,40 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
     protected void onStop() {
         Log.d(TAG, "onRestart was called.");
         super.onStop();
+        
+        // release the service connection regardless of stop or resume since it will have to be reestablished after restart anyway
+        Log.d(TAG, "Terminate service connection.");
+        unbindService(this.locationTrackerConnection);
+        
+        if (this.instanceStateSaved) {
+            Log.d(TAG, "We are going to be suspended temporarily (e.g. display orientation changed or keypad (de-)activated).");
+        } else {
+            if (locationTracker.isRunning()) {
+                Log.d(TAG, "Location tracker service is running - leave it running and send a notification as reminder.");
+                notify(R.string.notification_service_running_in_background, getText(R.string.notification_service_running_in_background));
+            } else {
+                Log.d(TAG, "The location tracker service is used but not running - it's safe to stop it.");
+                stopService(new Intent(LiveTracker.this, LocationTracker.class));
+            }
+        }
     }
     
     @Override
     protected void onDestroy() {
         Log.d(TAG, "onDestroy was called.");
         super.onDestroy();
-        if (locationTracker != null) {
-            Log.d(TAG, "Terminate service connection.");
-            unbindService(this.locationTrackerConnection);
-            if (this.instanceStateSaved) {
-                Log.d(TAG, "We are going to be suspended temporarily (e.g. display orientation changed or keypad (de-)activated).");
-            }
-            else {
-                if (locationTracker.isRunning()) {
-                    Log.d(TAG, "Location tracker service is running - leave it running and send a notification as reminder.");
-                    notify(R.string.notification_service_running_in_background,
-                            getText(R.string.notification_service_running_in_background));
-                } else {
-                    Log.d(TAG, "The location tracker service is used but not running - it's safe to stop it.");
-                    stopService(new Intent(LiveTracker.this, LocationTracker.class));
-                }
-            }
-        } else {
-            Log.d(TAG, "The location tracker service is not used - it's safe to stop it.");
-            stopService(new Intent(LiveTracker.this, LocationTracker.class));
-        }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         Log.d(TAG, "onSaveInstanceState was called.");
         super.onSaveInstanceState(outState);
-        outState.putBoolean(INSTANCE_STATE_SAVED, true);
+
+        // let the following life cycle callbacks know that we are going through a restart
         this.instanceStateSaved = true;
+        
+        // set a marker to indicate a restart during the restart
+        outState.putBoolean(INSTANCE_STATE_SAVED, true);
     }
     
     protected boolean isInstanceStateSaved() {
