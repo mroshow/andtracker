@@ -18,10 +18,12 @@
 package de.avanux.android.livetracker;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.util.Log;
 
 public class Configuration extends PropertiesStringParser implements OnSharedPreferenceChangeListener {
 
@@ -31,9 +33,8 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
 	
 	private static final String TAG = "LiveTracker:Configuration";
 
-    private static final String SERVER_BASE_URL = "http://miraculix.localnet:8080/LiveTrackerServer";
-    // private static final String SERVER_BASE_URL = "http://livetracker.dyndns.org";
-	
+    private static String serverBaseUrl;
+    
 	private Long timeInterval;
 
     private Long minTimeInterval;
@@ -50,7 +51,27 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
 	}
 
 	public static String getServerBaseUrl() {
-	    return SERVER_BASE_URL;
+        // FIXME: this is a hack during main development phase to switch easily between development server and deployment server
+	    if(serverBaseUrl == null) {
+	        String hostAddress = null;
+	        try {
+	            InetAddress addr = InetAddress.getByName("miraculix.localnet");
+	            if(addr != null) {
+	                hostAddress = addr.getHostAddress();
+	            }
+	        } catch (UnknownHostException e) {
+	            e.printStackTrace();
+	        }
+	        
+	        if(hostAddress.equals("192.168.70.5")) {
+	            serverBaseUrl = "http://miraculix.localnet:8080/LiveTrackerServer";
+	        }
+	        else {
+	            serverBaseUrl = "http://livetracker.dyndns.org";
+	        }
+	        Log.d(TAG, "serverBaseUrl=" + serverBaseUrl);
+	    }
+	    return serverBaseUrl;
 	}
 	
     public boolean isMatchingServerApiVersion() {
@@ -135,11 +156,11 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if(key.equals(this.timeIntervalPreferenceKey)) {
-            setTimeInterval(Long.parseLong(sharedPreferences.getString(this.timeIntervalPreferenceKey, "" + getDefaultTimeInterval())));
+        if(key.equals(timeIntervalPreferenceKey)) {
+            setTimeInterval(Long.parseLong(sharedPreferences.getString(timeIntervalPreferenceKey, "" + getDefaultTimeInterval())));
         }
-        else if (key.equals(this.distancePreferenceKey)) {
-            setDistance(Float.parseFloat(sharedPreferences.getString(this.distancePreferenceKey, "" + getDefaultDistance())));
+        else if (key.equals(distancePreferenceKey)) {
+            setDistance(Float.parseFloat(sharedPreferences.getString(distancePreferenceKey, "" + getDefaultDistance())));
         }
     }
 }
