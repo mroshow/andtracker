@@ -125,6 +125,8 @@
             android:layout_height="wrap_content"
             android:textSize="18dip"
             android:textColor="#FFFFFFFF"
+            android:autoLink="all"
+            android:linksClickable="true"
         />
     </LinearLayout>
     <LinearLayout 
@@ -149,6 +151,8 @@
             android:layout_height="wrap_content"
             android:textSize="18dip"
             android:textColor="#FFFFFFFF"
+            android:autoLink="all"
+            android:linksClickable="true"
         />
     </LinearLayout>
     <LinearLayout 
