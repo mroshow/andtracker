@@ -1,0 +1,29 @@
+body {
+    color:#669999;
+    margin-bottom:.1em;
+    padding-bottom:0;
+}
+
+strong {
+    font-size:1.65em;
+    color:#669999;
+    margin-bottom:.1em;
+    padding-bottom:0;
+}
+
+input[readonly=true] {
+    border: none;
+}
+
+#map {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#mapWrapper {
+    position: absolute;
+    top: 60px;
+    bottom: 0px;
+    width: 100%;
+}
