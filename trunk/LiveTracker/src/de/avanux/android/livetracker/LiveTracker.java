@@ -69,6 +69,8 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
     
     private boolean instanceStateSaved;
 
+    private ServiceConnection locationTrackerConnection;
+    
     private LocationTracker locationTracker;
 
     
@@ -78,8 +80,43 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
     public void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate was called.");
         if(savedInstanceState != null && savedInstanceState.getBoolean(INSTANCE_STATE_SAVED)) {
+            this.instanceStateSaved = true;
             Log.d(TAG, "Saved instance state is available - we were probably restarted (e.g. display orientation changed or keypad (de-)activated).");
         }
+        
+        this.locationTrackerConnection = new ServiceConnection() {
+            public void onServiceConnected(ComponentName className, IBinder service) {
+                Log.d(TAG, "Connection to location tracker service established.");
+
+                // first of all: make the location tracker available
+                locationTracker = ((LocationTracker.LocationTrackerBinder) service).getService();
+
+                // let the location tracker know where to send display updates
+                locationTracker.setUpdatableDisplay(getUpdatableDisplay());
+
+                if (getConfiguration() == null) {
+                    if(! isInstanceStateSaved()) {
+                        Log.d(TAG, "Location tracker service is not yet configured.");
+                        new DownloadConfigurationTask().execute(Configuration.getServerBaseUrl() + "/ConfigurationProvider");
+                    }
+                    else {
+                        Log.d(TAG, "Location tracker service is not yet configured but no need to try again after restart.");
+                    }
+                } else {
+                    Log.d(TAG, "Location tracker service is already configured.");
+                    updateTrackingID();
+                    updateLocationsSentCount(locationTracker.getLocationsSent());
+                    updateLastLocationSentTime(locationTracker.getLastTimePosted());
+                    updateButtons();
+                }
+            }
+
+            public void onServiceDisconnected(ComponentName className) {
+                locationTracker = null;
+            }
+        };
+
+        
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
     }
@@ -98,12 +135,12 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
         // make preference keys available to configuration
         Configuration.setTimeIntervalPreferenceKey(getString(R.string.preference_timeInterval_key));
         Configuration.setDistancePreferenceKey(getString(R.string.preference_distance_key));
-        
+
         // explicit start of service in order to let it survive an unbind
         startService(new Intent(LiveTracker.this, LocationTracker.class));
 
         // bind service after it has been started
-        bindService(new Intent(LiveTracker.this, LocationTracker.class), locationTrackerConnection, 0);
+        bindService(new Intent(LiveTracker.this, LocationTracker.class), this.locationTrackerConnection, 0);
 
         Button startButton = (Button) findViewById(R.id.button_start);
         startButton.setOnClickListener(new View.OnClickListener() {
@@ -154,7 +191,7 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
         super.onDestroy();
         if (locationTracker != null) {
             Log.d(TAG, "Terminate service connection.");
-            unbindService(locationTrackerConnection);
+            unbindService(this.locationTrackerConnection);
             if (this.instanceStateSaved) {
                 Log.d(TAG, "We are going to be suspended temporarily (e.g. display orientation changed or keypad (de-)activated).");
             }
@@ -181,53 +218,10 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
         outState.putBoolean(INSTANCE_STATE_SAVED, true);
         this.instanceStateSaved = true;
     }
-
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        // TODO Auto-generated method stub
-//        super.onActivityResult(requestCode, resultCode, data);
-//        
-//        switch (requestCode) {
-//            case (REQUEST_CODE_PICK_CONTACT_FROM_LIST) :
-//                if(data != null){
-//                    final Uri personUri = data.getData();
-//                    if(personUri != null){
-//                         final Cursor c = getContentResolver().query(personUri, null, null, null, null);
-//                         startManagingCursor(c);
-//                         if(c != null && c.moveToFirst()){
-//                              final long prefferedPhoneID = c.getLong(c.getColumnIndexOrThrow(People.PRIMARY_PHONE_ID));
-//
-//                              final Uri phoneUri = Uri.withAppendedPath(People.CONTENT_URI, "" + prefferedPhoneID).buildUpon().appendPath(People.Phones.CONTENT_DIRECTORY).build();
-//                              final Cursor d = getContentResolver().query(phoneUri, null, null, null, null);
-//                              startManagingCursor(c);
-//                              if(d != null && d.moveToFirst()){
-//                                   final String num = d.getString(d.getColumnIndexOrThrow(People.Phones.NUMBER));
-//                                   Log.d(TAG, num);
-//                              }
-//                         }
-//                    }
-//               }                     
-//                    
-////                    Uri contactData = data.getData();
-////            
-////                    Intent intent = new Intent(Intent.ACTION_VIEW, contactData);
-////                    
-////                    startActivity(intent);            
-//            
-//            
-////            Cursor c =  managedQuery(contactData, null, null, null, null);
-////            if (c.moveToFirst()) {
-////              String name = c.getString(c.getColumnIndexOrThrow(People.NAME));
-////              // TODO Whatever you want to do with the selected contact name.
-////            }
-//                    break;
-//            case (REQUEST_CODE_PICK_EMAIL) :
-//                if (resultCode == Activity.RESULT_OK) {
-//                    Object object = data.getData(); 
-//                }
-//        }
-//      }
     
+    protected boolean isInstanceStateSaved() {
+        return this.instanceStateSaved;
+    }
     
     // ~ UI handling ----------------------------------------------------------
 
@@ -298,36 +292,6 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
         return this;
     }
 
-    // ~ Service handling -----------------------------------------------------
-
-    private ServiceConnection locationTrackerConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            Log.d(TAG, "Connection to location tracker service established.");
-
-            // first of all: make the location tracker available
-            locationTracker = ((LocationTracker.LocationTrackerBinder) service).getService();
-
-            // let the location tracker know where to send display updates
-            locationTracker.setUpdatableDisplay(getUpdatableDisplay());
-
-            if (getConfiguration() == null) {
-                Log.d(TAG, "Location tracker service is not yet configured.");
-                new DownloadConfigurationTask().execute(Configuration.getServerBaseUrl() + "/ConfigurationProvider");
-            } else {
-                Log.d(TAG, "Location tracker service is already configured.");
-                updateTrackingID();
-                updateLocationsSentCount(locationTracker.getLocationsSent());
-                updateLastLocationSentTime(locationTracker.getLastTimePosted());
-                updateButtons();
-            }
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            locationTracker = null;
-        }
-    };
-
-    
     // ~ Options menu ---------------------------------------------------------
 
     @Override
