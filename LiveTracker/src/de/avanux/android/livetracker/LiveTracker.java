@@ -240,6 +240,9 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
     public void updateTrackingID() {
         TextView idField = (TextView) findViewById(R.id.field_trackingID);
         idField.setText(getConfiguration().getID());
+
+        TextView url = (TextView) findViewById(R.id.label_website_url);
+        url.setText(Configuration.getServerBaseUrl() + "/?trackingID=" + getConfiguration().getID());
     }
 
     public void updateLocationsSentCount(Integer count) {
