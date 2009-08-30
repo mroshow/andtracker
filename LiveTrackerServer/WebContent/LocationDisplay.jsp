@@ -40,7 +40,7 @@ String requestUrl = request.getRequestURL().toString();
     <link rel="icon" href="<%=requestUrl.substring(0, requestUrl.lastIndexOf('/'))%>/favicon.ico"/>
     <link rel="stylesheet" type="text/css" href="<%=requestUrl.substring(0, requestUrl.lastIndexOf('/'))%>/livetracker.css" />
 
-	<script type="text/javascript"><!--
+	<script type="text/javascript">
     var map;
     var trackingID;
     var triggerUpdateActive = false;
@@ -76,8 +76,8 @@ String requestUrl = request.getRequestURL().toString();
             projection: new OpenLayers.Projection("EPSG:900913"),
             displayProjection: new OpenLayers.Projection("EPSG:4326"),
             units: "m",
-            numZoomLevels: 18,
-//            maxResolution: 156543.0339,
+            numZoomLevels: 20,
+            maxResolution: 156543.0339,
             maxExtent: new OpenLayers.Bounds(-20037508.34, -20037508.34,
                                              20037508.34, 20037508.34),
             controls: [
@@ -89,16 +89,16 @@ String requestUrl = request.getRequestURL().toString();
             ]
         });
 
-        var gMapLayer = new OpenLayers.Layer.Google("Google", {sphericalMercator:true});
-        var gPhysicalLayer = new OpenLayers.Layer.Google("Google Physical", {type:"G_PHYSICAL_MAP", sphericalMercator:true});
-        var gSatelliteLayer = new OpenLayers.Layer.Google("Google Satellite", {type:"G_SATELLITE_MAP", sphericalMercator:true});
         var osmLayer = new OpenLayers.Layer.OSM.Mapnik("OpenStreetMap");
+        var gMapLayer = new OpenLayers.Layer.Google("Google", {sphericalMercator:true});
+        var gPhysicalLayer = new OpenLayers.Layer.Google("Google Physical", {type: G_PHYSICAL_MAP, sphericalMercator:true});
+        var gSatelliteLayer = new OpenLayers.Layer.Google("Google Satellite", {type: G_SATELLITE_MAP, sphericalMercator:true});
         map.addLayers([gMapLayer, gPhysicalLayer, gSatelliteLayer, osmLayer]);
 
         if (isNaN(map.size.w) || isNaN(map.size.h)) {
             map.updateSize();
         }
-                
+        
         map.zoomTo(zoom);
         center = map.getCenter();
 
@@ -130,21 +130,20 @@ String requestUrl = request.getRequestURL().toString();
     }
     
     function updateMap(lonlat, newZoom) {
-        // center map for marker initially and if it has not been changed by user
-        if(    (map.getCenter().lon == 0 &&  map.getCenter().lat == 0)
-            || (map.getCenter().lon == center.lon && map.getCenter().lat == center.lat)) {                    
-            map.setCenter(lonlat);
-            center = map.getCenter();
-        }
-        
         // adjust zoom only if it has not been changed by user
         if(map.getZoom() == zoom) {
-            zoom = newZoom;
-            if(map.getZoom() != newZoom) {
+            // convert to Number otherwise it will not work properly: http://trac.openlayers.org/ticket/2180
+            zoom = Number(newZoom);
+            if(map.getZoom() != zoom) {
                 map.zoomTo(zoom);
-                // this is required for Google Maps layer - otherwise only the Zoom pan bar is adjusted but the map zoom doesn't change
-                map.zoomToExtent(map.getExtent());
             } 
+        }
+        
+        // center map for marker initially and if it has not been changed by user
+        if((map.getCenter().lon == 0 && map.getCenter().lat == 0)
+        || (map.getCenter().lon == center.lon && map.getCenter().lat == center.lat)) {                    
+            map.setCenter(lonlat);
+            center = map.getCenter();
         }
     }
 
@@ -198,15 +197,17 @@ String requestUrl = request.getRequestURL().toString();
                 popup.destroy();
                 popup = null;
             }
+            
+            updateMap(lonlat, newZoom);
+
             popup = new OpenLayers.Popup.FramedCloud("id",
-                lonlat,
-                new OpenLayers.Size(200,200),
-                date.toLocaleTimeString() + "<br/>" + getSpeedForUOM(speed),
-                null,
-                true);
+                    lonlat,
+                    new OpenLayers.Size(200,200),
+                    date.toLocaleTimeString() + "<br/>" + getSpeedForUOM(speed),
+                    null,
+                    true);
             popup.panMapIfOutOfView = false;
             map.addPopup(popup);
-            updateMap(lonlat, newZoom);
         }
         updateLastRefresh();
     }
