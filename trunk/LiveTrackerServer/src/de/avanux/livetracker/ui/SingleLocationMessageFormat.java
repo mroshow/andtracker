@@ -17,16 +17,11 @@
  */
 package de.avanux.livetracker.ui;
 
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-
 import de.avanux.livetracker.LocationMessage;
 
 public class SingleLocationMessageFormat extends LocationMessageFormat {
 
     private static final String MESSAGE_VALUE_SEPARATOR = ",";
-    
-    private static DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("HH:mm:ss");
     
     private LocationMessage locationMessage;
     
@@ -44,7 +39,7 @@ public class SingleLocationMessageFormat extends LocationMessageFormat {
         + MESSAGE_VALUE_SEPARATOR
         + getSecondsUtilNextRefresh()
         + MESSAGE_VALUE_SEPARATOR
-        + dateFormatter.print(this.locationMessage.getDate())
+        + this.locationMessage.getDate().toDate().getTime()
         ;
     }
 }

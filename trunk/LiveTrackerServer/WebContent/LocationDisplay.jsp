@@ -126,10 +126,7 @@ String requestUrl = request.getRequestURL().toString();
 
     function updateLastRefresh() {
         var date = new Date();
-        var minutes = ( date.getMinutes() < 10 ? '0' : '' ) + date.getMinutes();
-        var seconds = ( date.getSeconds() < 10 ? '0' : '' ) + date.getSeconds();
-        var time = date.getHours() + ":" + minutes + ":" + seconds;
-        document.getElementById('lastRefresh').value = time;
+        document.getElementById('lastRefresh').value = date.toLocaleTimeString();
     }
     
     function updateMap(lonlat, newZoom) {
@@ -171,7 +168,11 @@ String requestUrl = request.getRequestURL().toString();
                 markerLayer = new OpenLayers.Layer.Markers("Location", {'projection': new OpenLayers.Projection("EPSG:4326")} );
             }
             markerLayer.addMarker(locationMarker);
-                
+
+            var dateMillis = new Date();
+            dateMillis.setTime(singleLocationMessage[4]);
+            
+                   
             if (popup){
                 popup.destroy();
                 popup = null;
@@ -179,7 +180,7 @@ String requestUrl = request.getRequestURL().toString();
             popup = new OpenLayers.Popup.FramedCloud("id",
                 lonlat,
                 new OpenLayers.Size(200,200),
-                singleLocationMessage[4],
+                dateMillis.toLocaleTimeString(),
                 null,
                 true);
             popup.panMapIfOutOfView = false;
@@ -223,7 +224,7 @@ String requestUrl = request.getRequestURL().toString();
             <td width="30%" valign="center">
                 ID <input type="text" id="trackingID" size="5" maxlength="5" />
                    <input type="submit" onclick="configure(); return false;" value="Track" />
-            </td>
+           </td>
             <td width="30%" valign="center">
                 Last refresh <input type="text" id="lastRefresh" size="8" border="0" readonly="true" value=""/>
             </td>

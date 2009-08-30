@@ -21,9 +21,10 @@ input[readonly=true] {
     height: 100%;
 }
 
+/* using 100% for width a horizontal scroll bar is displayed and the map is not fully visible */
 #mapWrapper {
     position: absolute;
     top: 60px;
     bottom: 0px;
-    width: 100%;
+    width: 99%;
 }
