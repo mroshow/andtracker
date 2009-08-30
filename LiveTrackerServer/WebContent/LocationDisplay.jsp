@@ -50,6 +50,7 @@ String requestUrl = request.getRequestURL().toString();
     var popup;
     var markerLayer;
     var locationMarker;
+    var locationRequestUrl;
 
     OpenLayers.ProxyHost = "";
 
@@ -88,11 +89,11 @@ String requestUrl = request.getRequestURL().toString();
             ]
         });
 
-        var osmLayer = new OpenLayers.Layer.OSM.Mapnik("OpenStreetMap");
         var gMapLayer = new OpenLayers.Layer.Google("Google", {sphericalMercator:true});
         var gPhysicalLayer = new OpenLayers.Layer.Google("Google Physical", {type:"G_PHYSICAL_MAP", sphericalMercator:true});
         var gSatelliteLayer = new OpenLayers.Layer.Google("Google Satellite", {type:"G_SATELLITE_MAP", sphericalMercator:true});
-        map.addLayers([osmLayer, gMapLayer, gPhysicalLayer, gSatelliteLayer]);
+        var osmLayer = new OpenLayers.Layer.OSM.Mapnik("OpenStreetMap");
+        map.addLayers([gMapLayer, gPhysicalLayer, gSatelliteLayer, osmLayer]);
 
         if (isNaN(map.size.w) || isNaN(map.size.h)) {
             map.updateSize();
@@ -106,6 +107,11 @@ String requestUrl = request.getRequestURL().toString();
             document.getElementById('trackingID').value = trackingIDFromRequest;
             configure();        
         }
+        else {
+            document.getElementById('trackingID').value = '';
+        }
+        
+        document.getElementById('lastRefresh').value = 'none';
     }
 
     function triggerUpdate() {
@@ -115,10 +121,7 @@ String requestUrl = request.getRequestURL().toString();
 
     function update() {
         triggerUpdate();
-            var request = OpenLayers.Request.GET({
-                url: "http://localhost:8080/LiveTrackerServer/location?trackingID=1&trackerID=1",
-                callback: parseLocation
-            });
+        var request = OpenLayers.Request.GET({url: locationRequestUrl, callback: parseLocation});
     }
 
     function updateLastRefresh() {
@@ -138,16 +141,17 @@ String requestUrl = request.getRequestURL().toString();
         }
         
         // adjust zoom only if it has not been changed by user
-    	if(map.getZoom() == zoom) {
+        if(map.getZoom() == zoom) {
             zoom = newZoom;
-            map.zoomTo(zoom);
+            if(map.getZoom() != newZoom) {
+                map.zoomTo(zoom);
+                // this is required for Google Maps layer - otherwise only the Zoom pan bar is adjusted but the map zoom doesn't change
+                map.zoomToExtent(map.getExtent());
+            } 
         }
-
-        updateLastRefresh();
     }
     
     function parseLocation(request) {
-//        alert(request.responseText);
         var singleLocationMessage = request.responseText.split(",");
         if(singleLocationMessage != null && singleLocationMessage.length == 5) {
             refreshSeconds = singleLocationMessage[3];
@@ -164,7 +168,7 @@ String requestUrl = request.getRequestURL().toString();
             locationMarker = new OpenLayers.Marker(lonlat, icon);
 
             if(markerLayer == null) {
-                markerLayer = new OpenLayers.Layer.Markers("Location");
+                markerLayer = new OpenLayers.Layer.Markers("Location", {'projection': new OpenLayers.Projection("EPSG:4326")} );
             }
             markerLayer.addMarker(locationMarker);
                 
@@ -182,6 +186,7 @@ String requestUrl = request.getRequestURL().toString();
             map.addPopup(popup);
             updateMap(lonlat, singleLocationMessage[2]);
         }
+        updateLastRefresh();
     }
 
     function configure() {
@@ -194,7 +199,11 @@ String requestUrl = request.getRequestURL().toString();
                 trackerID = '<%= UUID.randomUUID()%>'
                 createCookie('trackerID', trackerID);
             }
-        
+
+            locationRequestUrl = "<%=requestUrl.substring(0, requestUrl.lastIndexOf('/'))%>/location?"
+                + "<%=LocationMessageProvider.HTTP_PARAM_TRACKING_ID%>=" + trackingID
+                + "&<%=LocationMessageProvider.HTTP_PARAM_TRACKER_ID%>=" + trackerID;
+                            
             if (! triggerUpdateActive) {
                 update();
             }
