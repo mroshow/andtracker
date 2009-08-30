@@ -42,7 +42,7 @@ public class SingleLocationMessageFormat extends LocationMessageFormat {
         + MESSAGE_VALUE_SEPARATOR
         + getZoom()
         + MESSAGE_VALUE_SEPARATOR
-        + getLocationsReceived()
+        + getSecondsUtilNextRefresh()
         + MESSAGE_VALUE_SEPARATOR
         + dateFormatter.print(this.locationMessage.getDate())
         ;
