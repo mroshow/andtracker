@@ -32,6 +32,7 @@ import de.avanux.livetracker.LocationMessage;
 import de.avanux.livetracker.Tracker;
 import de.avanux.livetracker.Tracking;
 import de.avanux.livetracker.TrackingManager;
+import de.avanux.livetracker.admin.Configuration;
 
 /**
  * Servlet implementation class TrackDisplay
@@ -98,7 +99,7 @@ public class LocationMessageProvider extends HttpServlet {
         if(locationMessage != null) {
             SingleLocationMessageFormat format = new SingleLocationMessageFormat(locationMessage);
             format.setZoom(getZoom(locationMessage.getSpeed()));
-            format.setLocationsReceived(tracking.getStatistics().getLocationMessagesCount());
+            format.setSecondsUtilNextRefresh(Configuration.getInstance().getMinTimeInterval());
             out.print(format.toString());
             log.debug(tracking.getTrackingID() + " Location message printed: " + format.toString());
         }        

@@ -22,7 +22,7 @@ abstract public class LocationMessageFormat {
     
     private int zoom;
     
-    private int locationsReceived;
+    private long secondsUtilNextRefresh;
 
     
     public int getZoom() {
@@ -33,12 +33,11 @@ abstract public class LocationMessageFormat {
         this.zoom = zoom;
     }
 
-    public int getLocationsReceived() {
-        return locationsReceived;
+    public long getSecondsUtilNextRefresh() {
+        return secondsUtilNextRefresh;
     }
 
-    public void setLocationsReceived(int locationsReceived) {
-        this.locationsReceived = locationsReceived;
+    public void setSecondsUtilNextRefresh(long secondsUtilNextRefresh) {
+        this.secondsUtilNextRefresh = secondsUtilNextRefresh;
     }
-    
 }
