@@ -43,7 +43,7 @@ public class LocationSender {
             LocationSender sender = new LocationSender();
             Configuration configuration = sender.requestConfiguration();
             float lon = 8.9842f;
-            for(int i=0;i<3;i++) {
+            for(int i=0;i<10;i++) {
                 sender.sendPositionData(configuration, 50.2911f, lon);
 //                lon += 0.002;
                 lon += 0.005;
