@@ -147,13 +147,34 @@ String requestUrl = request.getRequestURL().toString();
             } 
         }
     }
+
+    function getSpeedForUOM(speed) {
+    	var optionIndex = document.getElementById('speedUom').selectedIndex;
+        var uomSpeed;
+        switch(optionIndex) {
+            case 0:
+                uomSpeed = Math.round(3.6 * speed) + " km/h";
+                break;
+            case 1:
+                uomSpeed = Math.round(speed / 0.44704) + " mph";
+                break;
+            default:
+                break;
+        }
+        return uomSpeed;
+    }
     
     function parseLocation(request) {
         var singleLocationMessage = request.responseText.split(",");
-        if(singleLocationMessage != null && singleLocationMessage.length == 5) {
+        if(singleLocationMessage != null && singleLocationMessage.length == 6) {
+            var lon = singleLocationMessage[0];
+            var lat = singleLocationMessage[1];
+            var newZoom = singleLocationMessage[2];  
             refreshSeconds = singleLocationMessage[3];
+            var speed = singleLocationMessage[4];
+            var dateMillis = singleLocationMessage[5];
             
-            var lonlat = new OpenLayers.LonLat(singleLocationMessage[0], singleLocationMessage[1]).transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject());
+            var lonlat = new OpenLayers.LonLat(lon, lat).transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject());
 
             var size = new OpenLayers.Size(21,25);
             var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
@@ -169,8 +190,8 @@ String requestUrl = request.getRequestURL().toString();
             }
             markerLayer.addMarker(locationMarker);
 
-            var dateMillis = new Date();
-            dateMillis.setTime(singleLocationMessage[4]);
+            var date = new Date();
+            date.setTime(dateMillis);
             
                    
             if (popup){
@@ -180,12 +201,12 @@ String requestUrl = request.getRequestURL().toString();
             popup = new OpenLayers.Popup.FramedCloud("id",
                 lonlat,
                 new OpenLayers.Size(200,200),
-                dateMillis.toLocaleTimeString(),
+                date.toLocaleTimeString() + "<br/>" + getSpeedForUOM(speed),
                 null,
                 true);
             popup.panMapIfOutOfView = false;
             map.addPopup(popup);
-            updateMap(lonlat, singleLocationMessage[2]);
+            updateMap(lonlat, newZoom);
         }
         updateLastRefresh();
     }
@@ -213,19 +234,20 @@ String requestUrl = request.getRequestURL().toString();
     </script>
 </head>
 <body onload="init()">
-    <table border="0" cellpadding="2">
-        <tr>
-            <td valign="center">
+    <table border="0" cellpadding="2" cellspacing="2">
+        <tr valign="bottom">
+            <td>
                 <img src="livetracker.png" alt="LiveTracker logo" style="float:left; border:0" width="48" height="48">
             </td>
-            <td width="30%" valign="center">
+            <td>
                 <strong>Live Tracker</strong>
             </td>
-            <td width="30%" valign="center">
+            <td>
                 ID <input type="text" id="trackingID" size="5" maxlength="5" />
                    <input type="submit" onclick="configure(); return false;" value="Track" />
+                <select id="speedUom" name="speedUom"><option value="kmh">km/h</option><option value="mph">mph</option></select>
            </td>
-            <td width="30%" valign="center">
+            <td>
                 Last refresh <input type="text" id="lastRefresh" size="8" border="0" readonly="true" value=""/>
             </td>
         </tr>

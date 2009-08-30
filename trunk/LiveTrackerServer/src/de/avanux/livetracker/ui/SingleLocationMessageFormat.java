@@ -39,6 +39,8 @@ public class SingleLocationMessageFormat extends LocationMessageFormat {
         + MESSAGE_VALUE_SEPARATOR
         + getSecondsUtilNextRefresh()
         + MESSAGE_VALUE_SEPARATOR
+        + this.locationMessage.getSpeed()
+        + MESSAGE_VALUE_SEPARATOR
         + this.locationMessage.getDate().toDate().getTime()
         ;
     }
