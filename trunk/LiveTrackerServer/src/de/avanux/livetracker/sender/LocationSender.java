@@ -36,12 +36,13 @@ public class LocationSender {
 
     private static Log log = LogFactory.getLog(LocationSender.class);
     
-    private final static String CONFIGURATION_URL = "http://miraculix.localnet:8080/LiveTrackerServer/ConfigurationProvider";
+//    private final static String CONFIGURATION_URL = "http://miraculix.localnet:8080/LiveTrackerServer/ConfigurationProvider";
+//    private final static String CONFIGURATION_URL = "http://livetracker.dyndns.org/ConfigurationProvider";
     
     public static void main(String[] args) {
         try {
             LocationSender sender = new LocationSender();
-            Configuration configuration = sender.requestConfiguration();
+            Configuration configuration = sender.requestConfiguration(args[0]);
             float lon = 8.9842f;
             for(int i=0;i<10;i++) {
                 sender.sendPositionData(configuration, 50.2911f, lon);
@@ -55,10 +56,10 @@ public class LocationSender {
         }
     }
 
-    private Configuration requestConfiguration() {
+    private Configuration requestConfiguration(String url) {
         log.debug("Requesting configuration ...");
         Configuration configuration = null;
-        GetMethod method = new GetMethod(CONFIGURATION_URL);
+        GetMethod method = new GetMethod(url);
         executeHttpMethod(method);
         try {
             byte[] responseBody = method.getResponseBody();
