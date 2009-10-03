@@ -48,6 +48,17 @@ public class AdminServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException,
             IOException {
         log.debug("Received new configuration.");
+        
+        String checkIntervalSeconds = request.getParameter(LoadManager.CHECK_INTERVAL_SECONDS);
+        if(checkIntervalSeconds != null) {
+            LoadManager.setCheckIntervalSeconds(Integer.parseInt(checkIntervalSeconds));
+        }
+        
+        String trackingExpirationSeconds = request.getParameter(TrackingManager.TRACKING_EXPIRATION_SECONDS);
+        if(trackingExpirationSeconds != null) {
+            TrackingManager.setTrackingExpirationSeconds(Integer.parseInt(trackingExpirationSeconds));
+        }
+        
         String minTimeInterval = request.getParameter(ConfigurationConstants.MIN_TIME_INTERVAL);
         if (minTimeInterval != null) {
             Configuration.getInstance().setMinTimeInterval(Long.parseLong(minTimeInterval));
@@ -68,13 +79,19 @@ public class AdminServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
+        
         log.debug("String tracking manager ...");
-        this.trackingManagerThread = new Thread(new TrackingManager());
+        TrackingManager trackingManager = new TrackingManager();
+        this.trackingManagerThread = new Thread(trackingManager);
+        trackingManager.setRunThread(this.trackingManagerThread);
         this.trackingManagerThread.setName("TrackingManager");
         this.trackingManagerThread.start();
         log.debug("... tracking manager started.");
+
         log.debug("String load manager ...");
-        this.loadManagerThread = new Thread(new LoadManager());
+        LoadManager loadManager = new LoadManager();
+        this.loadManagerThread = new Thread(loadManager);
+        loadManager.setRunThread(this.loadManagerThread);
         this.loadManagerThread.setName("LoadManager");
         this.loadManagerThread.start();
         log.debug("... load manager started.");
