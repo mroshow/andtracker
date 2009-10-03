@@ -24,7 +24,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joda.time.DateTime;
 
+import de.avanux.livetracker.admin.TrackingManagerState;
 import de.avanux.livetracker.statistics.PeriodicStatistics;
 import de.avanux.livetracker.statistics.StatisticsManager;
 
@@ -32,9 +34,40 @@ public class TrackingManager implements Runnable {
 
     private static Log log = LogFactory.getLog(TrackingManager.class);
 
-    private final static long REMOVE_EXPIRED_TRACKINGS_INTERVAL_SECONDS = 24 * 60 * 60;
+    public static final String TRACKING_EXPIRATION_SECONDS = "trackingExpirationSeconds";
+    
+    private static int trackingExpirationSeconds = 24 * 60 * 60;
     
     private static Map<Integer, Tracking> trackings = new HashMap<Integer, Tracking>();
+
+    private static DateTime nextCheck;
+    
+    private static Thread runThread;
+    
+    private static boolean configurationChanged = false;
+    
+
+    public static void setTrackingExpirationSeconds(int trackingExpirationSeconds) {
+        TrackingManager.trackingExpirationSeconds = trackingExpirationSeconds;
+        log.debug("Set trackingExpirationSeconds=" + trackingExpirationSeconds);
+        if(runThread != null) {
+            configurationChanged = true;
+            runThread.interrupt();
+        }
+    }
+
+    public static long getTrackingExpirationSeconds() {
+        return trackingExpirationSeconds;
+    }
+
+    public static DateTime getNextCheck() {
+        return nextCheck;
+    }
+    
+    public void setRunThread(Thread runThread) {
+        TrackingManager.runThread = runThread;
+    }
+    
 
     public static synchronized Tracking createTracking() {
         int trackingID = getTrackingID();
@@ -67,23 +100,35 @@ public class TrackingManager implements Runnable {
         return trackings.get(trackingID);
     }
 
-    public static Collection<Tracking> getTrackings() {
-        return trackings.values();
+    public static TrackingManagerState getState() {
+        int activeTrackings = 0;
+        int activeTrackers = 0;
+        for(Tracking tracking : trackings.values()) {
+            if(! tracking.isExpired(trackingExpirationSeconds)) {
+                activeTrackings++;
+                activeTrackers+=tracking.getTrackerCount();
+            }
+        }
+        return new TrackingManagerState(activeTrackings, activeTrackers);
     }
 
     @Override
     public void run() {
-        long intervalMillis = REMOVE_EXPIRED_TRACKINGS_INTERVAL_SECONDS * 1000; 
         while (true) {
-            log.debug("Expired trackings will be removed every " + REMOVE_EXPIRED_TRACKINGS_INTERVAL_SECONDS + " seconds.");
+            long intervalMillis = trackingExpirationSeconds * 1000; 
+            configurationChanged = false;
+            log.debug("Expired trackings will be removed every " + trackingExpirationSeconds + " seconds.");
             synchronized (this) {
                 try {
-                    log.debug("Waiting for " + intervalMillis + " millis");
+                    nextCheck = new DateTime().plusSeconds(trackingExpirationSeconds);
+                    log.debug("Waiting for " + intervalMillis + " millis - next expiration check at " + nextCheck);
                     wait(intervalMillis);
                     removedExpiredTrackings();
                 } catch (Exception e) {
-                    log.warn("Interrupted.", e);
-                    break;
+                    log.warn("Interrupted.");
+                    if(! configurationChanged) {
+                        break;
+                    }
                 }
             }
         }
@@ -94,7 +139,7 @@ public class TrackingManager implements Runnable {
         log.debug("There are " + trackings.size() + " trackings before clean-up.");
         Collection<Integer> expiredTrackingIDs = new HashSet<Integer>();
         for (Tracking tracking : trackings.values()) {
-            if(tracking.isExpired()) {
+            if(tracking.isExpired(trackingExpirationSeconds)) {
                 periodicStatistics.addTrackingStatistics(tracking.getStatistics());
                 expiredTrackingIDs.add(tracking.getTrackingID());
             }
@@ -103,5 +148,4 @@ public class TrackingManager implements Runnable {
         log.debug("Removed " + expiredTrackingIDs.size() + " trackings.");
         StatisticsManager.addPeriodicStatistics(periodicStatistics);
     }
-    
 }
