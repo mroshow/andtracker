@@ -33,8 +33,6 @@ public class Tracking {
 
     private static Log log = LogFactory.getLog(Tracking.class);
     
-    private final static long EXPIRATION_SECONDS = 24 * 60 * 60;
-    
     private int trackingID;
 
     private DateTime creationoTime;
@@ -111,7 +109,7 @@ public class Tracking {
         this.trackers.keySet().removeAll(expiredTrackerIDs);
     }
 
-    public boolean isExpired() {
+    public boolean isExpired(int expirationSeconds) {
         DateTime present = new DateTime();
         Duration inactivityPeriod = null;
         if(this.locationMessage != null) {
@@ -120,7 +118,7 @@ public class Tracking {
         else {
             inactivityPeriod = new Duration(this.creationoTime, present);
         }
-        if(inactivityPeriod.getStandardSeconds() > EXPIRATION_SECONDS) {
+        if(inactivityPeriod.getStandardSeconds() > expirationSeconds) {
             return true;
         }
         else {
