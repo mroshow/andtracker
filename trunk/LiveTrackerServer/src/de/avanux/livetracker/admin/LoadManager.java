@@ -19,6 +19,7 @@ package de.avanux.livetracker.admin;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.joda.time.DateTime;
 
 import de.avanux.livetracker.Tracking;
 import de.avanux.livetracker.TrackingManager;
@@ -27,25 +28,57 @@ public class LoadManager implements Runnable {
 
     private static Log log = LogFactory.getLog(LoadManager.class);
 
-    private final static long CHECK_INTERVAL_SECONDS = 20;
+    public static final String CHECK_INTERVAL_SECONDS = "checkIntervalSeconds";
+    
+    private static int checkIntervalSeconds = 20;
+    
+    private static DateTime nextCheck;
+    
+    private static Thread runThread;
+    
+    private static boolean configurationChanged = false;
 
-    private static int activeTrackings = 0;
+    private static TrackingManagerState state;
+
     
-    private static int activeTrackers = 0;
+    public static int getCheckIntervalSeconds() {
+        return checkIntervalSeconds;
+    }
+
+    public static void setCheckIntervalSeconds(int checkIntervalSeconds) {
+        LoadManager.checkIntervalSeconds = checkIntervalSeconds;
+        log.debug("Set checkIntervalSeconds=" + checkIntervalSeconds);
+        if(runThread != null) {
+            configurationChanged = true;
+            runThread.interrupt();
+        }
+    }
+
+    public static DateTime getNextCheck() {
+        return nextCheck;
+    }
     
+    public void setRunThread(Thread runThread) {
+        LoadManager.runThread = runThread;
+    }
+
     @Override
     public void run() {
-        long intervalMillis = CHECK_INTERVAL_SECONDS * 1000; 
         while (true) {
-            log.debug("Load will be checked every " + CHECK_INTERVAL_SECONDS + " seconds.");
+            long intervalMillis = checkIntervalSeconds * 1000; 
+            configurationChanged = false;
+            log.debug("Load will be checked every " + checkIntervalSeconds + " seconds.");
             synchronized (this) {
                 try {
-                    log.debug("Waiting for " + intervalMillis + " millis");
+                    nextCheck = new DateTime().plusSeconds(checkIntervalSeconds);
+                    log.debug("Waiting for " + intervalMillis + " millis - next check at " + nextCheck);
                     wait(intervalMillis);
                     checkLoad();
                 } catch (Exception e) {
                     log.warn("Interrupted.");
-                    break;
+                    if(! configurationChanged) {
+                        break;
+                    }
                 }
             }
         }
@@ -53,24 +86,15 @@ public class LoadManager implements Runnable {
 
     public void checkLoad() {
         log.debug("Checking load ...");
-        int activeTrackings = 0;
-        int activeTrackers = 0;
-        for(Tracking tracking : TrackingManager.getTrackings()) {
-            if(! tracking.isExpired()) {
-                activeTrackings++;
-                activeTrackers+=tracking.getTrackerCount();
-            }
-        }
-        LoadManager.activeTrackings = activeTrackings;
-        LoadManager.activeTrackers = activeTrackers;
-        log.info("Current usage: trackings=" + activeTrackings + " / trackers=" + activeTrackers);
+        LoadManager.state = TrackingManager.getState();
+        log.info("Current usage: trackings=" + state.getActiveTrackings() + " / trackers=" + state.getActiveTrackers());
     }
 
     public static int getActiveTrackings() {
-        return activeTrackings;
+        return state.getActiveTrackings();
     }
 
     public static int getActiveTrackers() {
-        return activeTrackers;
+        return state.getActiveTrackers();
     }
 }
