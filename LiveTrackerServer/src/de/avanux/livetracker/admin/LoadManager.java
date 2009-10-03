@@ -87,9 +87,13 @@ public class LoadManager implements Runnable {
     public void checkLoad() {
         log.debug("Checking load ...");
         LoadManager.state = TrackingManager.getState();
-        log.info("Current usage: trackings=" + state.getActiveTrackings() + " / trackers=" + state.getActiveTrackers());
+        log.info("Current usage: registered trackings=" + state.getRegisteredTrackings() + " / active trackings=" + state.getActiveTrackings() + " / active trackers=" + state.getActiveTrackers());
     }
 
+    public static int getRegisteredTrackings() {
+        return state.getRegisteredTrackings();
+    }
+    
     public static int getActiveTrackings() {
         return state.getActiveTrackings();
     }

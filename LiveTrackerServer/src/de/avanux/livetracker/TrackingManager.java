@@ -101,15 +101,19 @@ public class TrackingManager implements Runnable {
     }
 
     public static TrackingManagerState getState() {
+        int registeredTrackings = 0;
         int activeTrackings = 0;
         int activeTrackers = 0;
         for(Tracking tracking : trackings.values()) {
             if(! tracking.isExpired(trackingExpirationSeconds)) {
-                activeTrackings++;
-                activeTrackers+=tracking.getTrackerCount();
+                registeredTrackings++;
             }
+            if(! tracking.isOverdue()) {
+                activeTrackings++;
+            }
+            activeTrackers+=tracking.getTrackerCount();
         }
-        return new TrackingManagerState(activeTrackings, activeTrackers);
+        return new TrackingManagerState(registeredTrackings, activeTrackings, activeTrackers);
     }
 
     @Override

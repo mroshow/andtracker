@@ -39,10 +39,12 @@ String requestUrl = request.getRequestURL().toString();
         <h2>Current load</h2>
         <table border="1">
             <tr>
+                <td>Registered trackings</td>
                 <td>Active trackings</td>
                 <td>Active trackers</td>
             </tr>
             <tr>
+                <td><%=LoadManager.getRegisteredTrackings()%></td>
                 <td><%=LoadManager.getActiveTrackings()%></td>
                 <td><%=LoadManager.getActiveTrackers()%></td>
             </tr>
