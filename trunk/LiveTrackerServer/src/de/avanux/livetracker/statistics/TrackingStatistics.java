@@ -17,14 +17,27 @@
  */
 package de.avanux.livetracker.statistics;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringBufferInputStream;
+import java.io.StringWriter;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.joda.time.Duration;
@@ -157,40 +170,77 @@ public class TrackingStatistics {
     }
 
     private void setCountryCode(float lat, float lon) {
+        Document doc = null;
+        HttpMethod method = null;            
+        InputStream responseBodyStream = null;
+        String responseBodyString = null;
         try {
             DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
             domFactory.setNamespaceAware(true); // never forget this!
             DocumentBuilder builder = domFactory.newDocumentBuilder();
+            
             String uri = "http://www.geoplugin.net/extras/location.gp?lat=" + lat + "&long=" + lon + "&format=xml";
             log.debug("Retrieving country from " + uri);
-            Document doc = builder.parse(uri);
             
-//            TransformerFactory tfactory = TransformerFactory.newInstance();
-//            Transformer serializer;
-//            try {
-//                serializer = tfactory.newTransformer();
-//                // Setup indenting to "pretty print"
-//                serializer.setOutputProperty(OutputKeys.INDENT, "yes");
-//                serializer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-//
-//                DOMSource xmlSource = new DOMSource(doc);
-//                StreamResult outputTarget = new StreamResult(System.out);
-//                serializer.transform(xmlSource, outputTarget);
-//            } catch (TransformerException e) {
-//                // this is fatal, just dump the stack and throw a runtime
-//                // exception
-//                e.printStackTrace();
-//            }            
+            HttpClient client = new HttpClient();
+            method = new GetMethod(uri);
+            client.executeMethod(method);
+            byte[] responseBodyBytes = method.getResponseBody();
+            
+            responseBodyString = new String(responseBodyBytes);
+            log.debug("Content retrieved: " + responseBodyString);
+            
+            // the content is declared as UTF-8 but it seems to be iso-8859-1
+            responseBodyString = new String(responseBodyBytes, "iso-8859-1");
+            
+            responseBodyStream = new StringBufferInputStream(responseBodyString);
+            doc = builder.parse(responseBodyStream);
             
             XPath xpath = XPathFactory.newInstance().newXPath();
             this.countryCode = ((Node) xpath.evaluate("/geoPlugin/geoplugin_countryCode/text()", doc, XPathConstants.NODE)).getNodeValue();
             log.debug("countryCode=" + this.countryCode);
         }
         catch(Exception e) {
+            if(responseBodyString != null) {
+                log.error("unparsed xml=" + responseBodyString);
+            }
+            if(doc != null) {
+                log.error("parsed xml=" + getDocumentAsString(doc));
+            }
             log.error("Error getting country code.", e);
+        }
+        finally {
+            try {
+                if (responseBodyStream != null) {
+                    responseBodyStream.close();
+                }
+                if (method != null) {
+                    method.releaseConnection();
+                }
+            } catch (IOException e) {
+                log.error("Error releasing resources: ", e);
+            }
         }
     }
 
+    private String getDocumentAsString(Document doc) {
+        String xmlString = null;
+        try {
+            TransformerFactory factory = TransformerFactory.newInstance();
+            Transformer serializer = factory.newTransformer();
+            serializer.setOutputProperty(OutputKeys.INDENT, "yes");
+            serializer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+
+            StringWriter writer = new StringWriter();
+            DOMSource xmlSource = new DOMSource(doc);
+            StreamResult outputTarget = new StreamResult(writer);
+            serializer.transform(xmlSource, outputTarget);
+        } catch (TransformerException e) {
+            log.error("Error transforming XML:", e);
+        }
+        return xmlString;
+    }
+    
     /**
      * Distance calculation between 2 Geopoint by Haversine formula
      * 
