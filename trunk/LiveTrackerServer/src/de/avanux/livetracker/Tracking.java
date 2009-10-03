@@ -31,11 +31,13 @@ import de.avanux.livetracker.statistics.TrackingStatistics;
 
 public class Tracking {
 
+    private final static int ADDITIONAL_OVERDUE_SECONDS = 5;
+    
     private static Log log = LogFactory.getLog(Tracking.class);
     
     private int trackingID;
 
-    private DateTime creationoTime;
+    private DateTime creationTime;
     
     private LocationMessage locationMessage;
     
@@ -48,7 +50,7 @@ public class Tracking {
     
     protected Tracking(int trackingID) {
         this.trackingID = trackingID;
-        this.creationoTime = new DateTime();
+        this.creationTime = new DateTime();
         this.statistics = new TrackingStatistics();
     }
 
@@ -116,13 +118,34 @@ public class Tracking {
             inactivityPeriod = new Duration(this.locationMessage.getDate(), present);
         }
         else {
-            inactivityPeriod = new Duration(this.creationoTime, present);
+            inactivityPeriod = new Duration(this.creationTime, present);
         }
         if(inactivityPeriod.getStandardSeconds() > expirationSeconds) {
             return true;
         }
         else {
             return false;
+        }
+    }
+    
+    /**
+     * Returns true, if no location message has been received for the average location message period plus additional 5 seconds.
+     * If no location message has been received yet we are overdue anyway.
+     * @return
+     */
+    public boolean isOverdue() {
+        if(this.locationMessage == null) {
+            // we are overdue until we receive location messages
+            return true;
+        }
+        else {
+            Duration age = new Duration(this.locationMessage.getDate(), new DateTime());
+            if(age.getStandardSeconds() > (this.statistics.getAvgLocationMessagePeriod() + ADDITIONAL_OVERDUE_SECONDS)) {
+                return true;
+            }
+            else {
+                return false;
+            }
         }
     }
 }
