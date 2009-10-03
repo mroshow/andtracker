@@ -37,6 +37,33 @@ String requestUrl = request.getRequestURL().toString();
 		<h1>Live Tracker Administration</h1>
 
 		<form action="<%=requestUrl.substring(0, requestUrl.lastIndexOf('/'))%>/AdminServlet" method="post">
+            <h2>Server configuration</h2>
+            <table>
+                <tr>
+                    <td>Next Load check</td>
+                    <td><%=LoadManager.getNextCheck()%></td>
+                </tr>
+                <tr>
+                    <td>Load check interval</td>
+                    <td>
+                        <input type="text" 
+                            name="<%=LoadManager.CHECK_INTERVAL_SECONDS%>"
+                            value="<%=LoadManager.getCheckIntervalSeconds()%>"
+                            />
+                    </td>
+                </tr>
+                <tr>
+                    <td>Tracking expiration</td>
+                    <td>
+                        <input type="text" 
+                            name="<%=TrackingManager.TRACKING_EXPIRATION_SECONDS%>"
+                            value="<%=TrackingManager.getTrackingExpirationSeconds()%>"
+                            />
+                    </td>
+                </tr>
+            </table>
+            
+            <h2>Mobile configuration</h2>
 			<table>
 				<tr>
 					<td>Minimum time interval</td>
