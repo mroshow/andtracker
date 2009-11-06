@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiveTracker.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.avanux.android.livetracker;
+package de.avanux.android.andtracker;
 
 import java.io.IOException;
 import java.text.DecimalFormat;

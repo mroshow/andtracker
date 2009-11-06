@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiveTracker.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.avanux.android.livetracker;
+package de.avanux.android.andtracker;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
+import de.avanux.android.andtracker.R;
 
 import android.app.Activity;
 import android.app.ExpandableListActivity;
