@@ -100,7 +100,7 @@ public class LocationTracker extends Service implements LocationListener {
         
         String provider = locationManager.getBestProvider(criteria, true);
         // FIXME: use configured values but respect server minimums
-        locationManager.requestLocationUpdates(provider, configuration.getMinTimeInterval() * 1000, configuration.getMinDistance(), this);
+        locationManager.requestLocationUpdates(provider, configuration.getTimeInterval() * 1000, configuration.getDistance(), this);
 	}
 	
 	public void stop() {
@@ -163,12 +163,12 @@ public class LocationTracker extends Service implements LocationListener {
 		
 		public synchronized void setCurrentLocation(Location location) {
 			this.currentLocation = location;
-			Log.e(TAG, "setCurrentLocation=" + printShortLocation(location));
+			Log.d(TAG, "setCurrentLocation=" + printShortLocation(location));
 		}
 
 		private synchronized void addCurrentLocationToQueue() {
 			if(this.currentLocation != null) {
-				Log.e(TAG, "addCurrentLocationToQueue=" + printShortLocation(this.currentLocation));
+				Log.d(TAG, "addCurrentLocationToQueue=" + printShortLocation(this.currentLocation));
 				this.locations.add(new Location(this.currentLocation));
 				this.currentLocation = null;
 			}
@@ -176,7 +176,7 @@ public class LocationTracker extends Service implements LocationListener {
 		
 		private Location getFirstLocationFromQueue() {
 			if(this.locations.size() > 0) {
-				Log.e(TAG, "getFirstLocationFromQueue=" + printShortLocation(this.locations.get(0)));
+				Log.d(TAG, "getFirstLocationFromQueue=" + printShortLocation(this.locations.get(0)));
 				return this.locations.get(0);
 			}
 			else {
@@ -187,7 +187,7 @@ public class LocationTracker extends Service implements LocationListener {
 		
 		private synchronized void removeFirstLocationFromQueue() {
 			Location location = this.locations.remove(0);
-			Log.e(TAG, "removeFirstLocationFromQueue=" + printShortLocation(location));
+			Log.d(TAG, "removeFirstLocationFromQueue=" + printShortLocation(location));
 		}
 
 
@@ -203,7 +203,7 @@ public class LocationTracker extends Service implements LocationListener {
 		public void run() {
 		    try {
 	            Log.d(TAG, "Start running ...");
-	            long timeIntervalMillis = configuration.getMinTimeInterval() * 1000; 
+	            long timeIntervalMillis = configuration.getTimeInterval() * 1000; 
 	            while (isRunning()) {
 	                synchronized (this) {
 	                    try {

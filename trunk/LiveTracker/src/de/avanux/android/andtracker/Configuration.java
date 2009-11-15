@@ -34,11 +34,13 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
 	private static final String TAG = "LiveTracker:Configuration";
 
     private static String serverBaseUrl;
-    
+
+    private static String transmissionModeKey;
+
 	private Long timeInterval;
 
     private Long minTimeInterval;
-	
+
 	private static String timeIntervalPreferenceKey;
 
 	private Float distance;
@@ -48,6 +50,7 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
 	
 	public Configuration(String propertiesString) throws IOException {
 		super(propertiesString);
+        this.minTimeInterval = Long.parseLong(getProperties().getProperty(ConfigurationConstants.MIN_TIME_INTERVAL));
 	}
 
 	public static String getServerBaseUrl() {
@@ -87,54 +90,66 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
 	public String getID() {
 		return getProperties().getProperty(ConfigurationConstants.ID);
 	}
-
 	
-	public long getTimeInterval() {
-		if (timeInterval != null) {
-			return this.timeInterval;
-		} else {
-			return Long.parseLong(getProperties().getProperty(ConfigurationConstants.TIME_INTERVAL));
-		}
-	}
+	/**
+     * Returns the time interval to be used currently.
+	 * @return
+	 */
+    public long getTimeInterval() {
+        // this check has to be done here (and not in PreferencesActivity) since minTimeInterval may be changed by the server at any time,
+        // e.g. the preference may be 1 second but due to server load 3 second intervals are required
+        if (this.timeInterval < this.minTimeInterval) {
+            return this.minTimeInterval;
+        } else {
+            return this.timeInterval;
+        }
+    }
+
 	public void setTimeInterval(long timeInterval) {
 		this.timeInterval = timeInterval;
 	}
+	
+	public void setTimeInterval(SharedPreferences sharedPreferences) {
+        setTimeInterval(Long.parseLong(sharedPreferences.getString(timeIntervalPreferenceKey, "" + getDefaultTimeInterval())));
+	}
+	
 
+    /**
+     * Returns the time interval to be used if none is configured so far.
+     * @return
+     */
     public static long getDefaultTimeInterval() {
-        return 1;
+        return 0;
     }
 	
-    public long getMinTimeInterval() {
-        if (minTimeInterval != null) {
-            return this.minTimeInterval;
-        } else {
-            return Long.parseLong(getProperties().getProperty(ConfigurationConstants.MIN_TIME_INTERVAL));
-        }
-    }
     public void setMinTimeInterval(long minTimeInterval) {
         this.minTimeInterval = minTimeInterval;
     }
 	
+	/**
+     * Returns the required distance between location messages to be used actually.
+	 * @return
+	 */
 	public float getDistance() {
-		if (this.distance != null) {
-			return distance;
-		} else {
-			return Float.parseFloat(getProperties().getProperty(ConfigurationConstants.DISTANCE));
-		}
+	    return distance;
 	}
+	
 	public void setDistance(float distance) {
 		this.distance = distance;
 	}
+	
+	public void setDistance(SharedPreferences sharedPreferences) {
+        setDistance(Float.parseFloat(sharedPreferences.getString(distancePreferenceKey, "" + getDefaultDistance())));
+	}
 
-
+    /**
+     * Returns the required distance between location messages to be used if none is configured so far.
+     * @return
+     */
     public static long getDefaultDistance() {
         return 0;
     }
 	
-    public float getMinDistance() {
-		return Float.parseFloat(getProperties().getProperty(ConfigurationConstants.MIN_DISTANCE));
-    }
-
     public String getMessageToUsers() {
         return getProperties().getProperty(ConfigurationConstants.MESSAGE_TO_USERS);
     }
@@ -147,6 +162,10 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
     // ~ Preferences ----------------------------------------------------------------------------------------------------
 	//
 	
+	public static void setTransmissionModeKey(String transmissionModeKey) {
+        Configuration.transmissionModeKey = transmissionModeKey;
+	}
+	
     public static void setTimeIntervalPreferenceKey(String timeIntervalPreferenceKey) {
         Configuration.timeIntervalPreferenceKey = timeIntervalPreferenceKey;
     }
@@ -158,10 +177,23 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if(key.equals(timeIntervalPreferenceKey)) {
-            setTimeInterval(Long.parseLong(sharedPreferences.getString(timeIntervalPreferenceKey, "" + getDefaultTimeInterval())));
+            setTimeInterval(sharedPreferences);
         }
         else if (key.equals(distancePreferenceKey)) {
-            setDistance(Float.parseFloat(sharedPreferences.getString(distancePreferenceKey, "" + getDefaultDistance())));
+            setDistance(sharedPreferences);
+        }
+        else if(key.equals(transmissionModeKey)) {
+            // preferences should always contain manual values in order to preserve them when switching between the transmission mode;
+            // if transmission mode gets set to real-time only the configuration gets set to default time interval/default distance; preference values remain unchanged
+            TransmissionMode transmissionMode = TransmissionMode.valueOf(sharedPreferences.getString(transmissionModeKey, TransmissionMode.REALTIME.toString()));
+            if(TransmissionMode.REALTIME.equals(transmissionMode)) {
+                setTimeInterval(getDefaultTimeInterval());
+                setDistance(getDefaultDistance());
+            }
+            else {
+                setTimeInterval(sharedPreferences);
+                setDistance(sharedPreferences);
+            }
         }
     }
 }
