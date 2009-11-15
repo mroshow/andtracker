@@ -83,8 +83,8 @@ You should have received a copy of the GNU General Public License along with thi
 
     <string name="toast_serverNotAvailable">Unable to connect to tracking server.</string>
     <string name="toast_versionCodeMismatch">LiveTracker version incompatible with tracking server. Please update to a newer version of LiveTracker.</string>
-    <string name="toast_timeIntervalValueInvalid">The time interval must be a number having a value of 1 or greater.</string>
-    <string name="toast_distanceValueInvalid">The distance must be a number having a value of 0 or greater.</string>
+    <string name="toast_timeIntervalValueInvalid">The time interval must be a number having a value of at least</string>
+    <string name="toast_distanceValueInvalid">The distance must be a number having a value of at least</string>
 
     <!-- notifications -->    
 

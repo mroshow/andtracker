@@ -46,13 +46,23 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
 
     private static final String TAG = "LiveTracker:PreferencesActivity";
     
+    public static final String DEFAULT_TIME_INTERVAL = "defaultTimeInterval";
+    
+    public static final String DEFAULT_DISTANCE = "defaultDistance";
+    
     private static final TransmissionMode DEFAULT_TRANSMISSION_MODE = TransmissionMode.REALTIME;
 
     private TransmissionMode transmissionMode;
     
-    private Long minTimeInterval;
-    
-    private Float minDistance;
+    /**
+     * the default time interval represents also the minimum configurable time interval
+     */
+    private Long defaultTimeInterval;
+
+    /**
+     * the default distance represents also the minimum configurable distance
+     */
+    private Float defaultDistance;
     
     
     // ~ Life cycle callbacks -------------------------------------------------
@@ -72,8 +82,8 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
 
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
-            this.minTimeInterval = extras.getLong(ConfigurationConstants.MIN_TIME_INTERVAL);
-            this.minDistance = extras.getFloat(ConfigurationConstants.MIN_DISTANCE);
+            this.defaultTimeInterval = extras.getLong(DEFAULT_TIME_INTERVAL);
+            this.defaultDistance = extras.getFloat(DEFAULT_DISTANCE);
         }
         // FIXME: look in savedInstanceState for values including transmissionModes
         
@@ -88,7 +98,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
             boolean invalidValue = false;
             try {
                 long newTimeInterval = Long.parseLong(newValue.toString());
-                if (newTimeInterval < 1) {
+                if (newTimeInterval < 0) {
                     invalidValue = true;
                 }
             }
@@ -96,7 +106,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
                 invalidValue = true;
             }
             if(invalidValue) {
-                Toast.makeText(this, getString(R.string.toast_timeIntervalValueInvalid), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.toast_timeIntervalValueInvalid) + " " + this.defaultTimeInterval, Toast.LENGTH_LONG).show();
                 return false;
             }
         } else if (preference.getKey().equals(getString(R.string.preference_distance_key))) {
@@ -110,7 +120,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
                 invalidValue = true;
             }
             if (invalidValue) {
-                Toast.makeText(this, getString(R.string.toast_timeIntervalValueInvalid), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.toast_timeIntervalValueInvalid) + " " + this.defaultDistance.intValue(), Toast.LENGTH_LONG).show();
                 return false;
             }
         }
@@ -162,7 +172,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
         
         String timeInterval = null;
         if(TransmissionMode.REALTIME.equals(this.transmissionMode)) {
-            timeInterval = "" + this.minTimeInterval;
+            timeInterval = "" + this.defaultTimeInterval;
             preference.setEnabled(false);
         }
         else if(TransmissionMode.MANUAL.equals(this.transmissionMode)) {
@@ -172,7 +182,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
                 timeInterval = preferenceTimeInterval;
             }
             else {
-                timeInterval = "" + this.minTimeInterval;
+                timeInterval = "" + this.defaultTimeInterval;
             }
         }
         
@@ -185,7 +195,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
         
         String distance = null;
         if(TransmissionMode.REALTIME.equals(this.transmissionMode)) {
-            distance = "" + this.minDistance.intValue();
+            distance = "" + this.defaultDistance.intValue();
             preference.setEnabled(false);
         }
         else if(TransmissionMode.MANUAL.equals(this.transmissionMode)) {
@@ -195,7 +205,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnPrefere
                 distance = "" + preferenceDistance;
             }
             else {
-                distance = "" + this.minDistance.intValue();
+                distance = "" + this.defaultDistance.intValue();
             }
         }
         

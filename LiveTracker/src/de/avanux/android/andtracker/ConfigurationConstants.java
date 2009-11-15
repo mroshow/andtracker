@@ -23,13 +23,7 @@ public class ConfigurationConstants {
 
     public static final String ID = "id";
 
-    public static final String TIME_INTERVAL = "timeInterval";
-    
     public static final String MIN_TIME_INTERVAL = "minTimeInterval";
-
-    public static final String DISTANCE = "distance";
-    
-    public static final String MIN_DISTANCE = "minDistance";
 
     public static final String MESSAGE_TO_USERS = "messageToUsers";
     

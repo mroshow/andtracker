@@ -119,6 +119,7 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
         super.onStart();
         
         // make preference keys available to configuration
+        Configuration.setTransmissionModeKey(getString(R.string.preference_transmissionMode_key));
         Configuration.setTimeIntervalPreferenceKey(getString(R.string.preference_timeInterval_key));
         Configuration.setDistancePreferenceKey(getString(R.string.preference_distance_key));
 
@@ -339,8 +340,8 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
             return true;
         case MENU_ITEM_ID_PREFERENCES:
             intent = new Intent(this, PreferencesActivity.class);
-            intent.putExtra(ConfigurationConstants.MIN_TIME_INTERVAL, this.locationTracker.getConfiguration().getMinTimeInterval());
-            intent.putExtra(ConfigurationConstants.MIN_DISTANCE, this.locationTracker.getConfiguration().getMinDistance());
+            intent.putExtra(PreferencesActivity.DEFAULT_TIME_INTERVAL, Configuration.getDefaultTimeInterval());
+            intent.putExtra(PreferencesActivity.DEFAULT_DISTANCE, Configuration.getDefaultDistance());
             startActivity(intent);
             return true;
         case MENU_ITEM_ID_ABOUT:
@@ -360,6 +361,10 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
             // make sure that changed preferences take effect
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
             sharedPreferences.registerOnSharedPreferenceChangeListener(configuration);
+            
+            // set initial values from preferences
+            configuration.setTimeInterval(sharedPreferences);
+            configuration.setDistance(sharedPreferences);
         }
         if (configuration.getMessageToUsers() != null && configuration.getMessageToUsers().length() > 0) {
             notify(R.string.notification_message_to_users, configuration.getMessageToUsers());
