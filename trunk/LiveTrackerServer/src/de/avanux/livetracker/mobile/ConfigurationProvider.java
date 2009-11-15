@@ -70,7 +70,6 @@ public class ConfigurationProvider extends HttpServlet {
 	    configuration.put(ConfigurationConstants.ID, "" + TrackingManager.createTracking().getTrackingID());
         configuration.put(ConfigurationConstants.SERVER_API_VERSION, "1");
         configuration.put(ConfigurationConstants.MIN_TIME_INTERVAL, "" + Configuration.getInstance().getMinTimeInterval());
-        configuration.put(ConfigurationConstants.MIN_DISTANCE, "" + Configuration.getInstance().getMinDistance());
         configuration.put(ConfigurationConstants.MESSAGE_TO_USERS, Configuration.getInstance().getMessageToUsers());
 
         // FIXME: this is a hack during main development phase to switch easily between development server and deployment server

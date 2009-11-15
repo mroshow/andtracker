@@ -74,15 +74,6 @@ String requestUrl = request.getRequestURL().toString();
                             />
                     </td>
 				</tr>
-                <tr>
-                    <td>Minimum distance</td>
-                    <td>
-                        <input type="text"
-                            name="<%=ConfigurationConstants.MIN_DISTANCE%>"
-                            value="<%=Configuration.getInstance().getMinDistance()%>"
-                            />
-                    </td>
-                </tr>
 				<tr>
 					<td>Message to users</td>
                     <td>
