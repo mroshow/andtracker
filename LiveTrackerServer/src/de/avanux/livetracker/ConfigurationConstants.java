@@ -25,8 +25,6 @@ public class ConfigurationConstants {
     
     public static final String MIN_TIME_INTERVAL = "minTimeInterval";
 
-    public static final String MIN_DISTANCE = "minDistance";
-
     public static final String TRACKER_COUNT = "trackerCount";
     
     public static final String MESSAGE_TO_USERS = "messageToUsers";

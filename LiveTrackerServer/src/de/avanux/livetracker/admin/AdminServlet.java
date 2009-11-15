@@ -64,11 +64,6 @@ public class AdminServlet extends HttpServlet {
             Configuration.getInstance().setMinTimeInterval(Long.parseLong(minTimeInterval));
         }
 
-        String minDistance = request.getParameter(ConfigurationConstants.MIN_DISTANCE);
-        if (minDistance != null) {
-            Configuration.getInstance().setMinDistance(Long.parseLong(minDistance));
-        }
-
         Configuration.getInstance().setMessageToUsers(request.getParameter(ConfigurationConstants.MESSAGE_TO_USERS));
 
         String redirectTarget = request.getContextPath() + "/Admin.jsp";

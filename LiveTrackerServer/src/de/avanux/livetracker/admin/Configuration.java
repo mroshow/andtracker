@@ -38,9 +38,6 @@ public class Configuration {
     
     private Long minTimeInterval = null;
     
-    private Long minDistance = null;
-    
-    
     private String messageToUsers = "";
     
     
@@ -76,23 +73,6 @@ public class Configuration {
     public void setMinTimeInterval(long minTimeInterval) {
         this.minTimeInterval = minTimeInterval;
         log.debug("Set minTimeInterval = " + minTimeInterval);
-    }
-
-    public long getMinDistance() {
-        if(this.minDistance != null) {
-            return this.minDistance;
-        }
-        else if(this.properties != null) {
-            return Long.parseLong(this.properties.getProperty(ConfigurationConstants.MIN_DISTANCE));
-        }
-        else {
-            return 0;
-        }
-    }
-    
-    public void setMinDistance(long minDistance) {
-        this.minDistance = minDistance;
-        log.debug("Set minDistance = " + minDistance);
     }
 
     public String getPositionReceiverUrl() {
