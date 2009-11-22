@@ -20,10 +20,8 @@ package de.avanux.android.andtracker;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
@@ -156,8 +154,6 @@ public class LocationTracker extends Service implements LocationListener {
 		
 		private Long lastTimePosted;
 		
-		private List<Location> locations = new ArrayList<Location>();
-
 		private int locationsSent = 0;
 
 		
@@ -165,32 +161,7 @@ public class LocationTracker extends Service implements LocationListener {
 			this.currentLocation = location;
 			Log.d(TAG, "setCurrentLocation=" + printShortLocation(location));
 		}
-
-		private synchronized void addCurrentLocationToQueue() {
-			if(this.currentLocation != null) {
-				Log.d(TAG, "addCurrentLocationToQueue=" + printShortLocation(this.currentLocation));
-				this.locations.add(new Location(this.currentLocation));
-				this.currentLocation = null;
-			}
-		}
 		
-		private Location getFirstLocationFromQueue() {
-			if(this.locations.size() > 0) {
-				Log.d(TAG, "getFirstLocationFromQueue=" + printShortLocation(this.locations.get(0)));
-				return this.locations.get(0);
-			}
-			else {
-				Log.w(TAG, "getFirstLocationFromQueue=<queue empty>");
-				return null;
-			}
-		}
-		
-		private synchronized void removeFirstLocationFromQueue() {
-			Location location = this.locations.remove(0);
-			Log.d(TAG, "removeFirstLocationFromQueue=" + printShortLocation(location));
-		}
-
-
 		public int getLocationsSent() {
 			return locationsSent;
 		}
@@ -203,38 +174,47 @@ public class LocationTracker extends Service implements LocationListener {
 		public void run() {
 		    try {
 	            Log.d(TAG, "Start running ...");
-	            long timeIntervalMillis = configuration.getTimeInterval() * 1000; 
-	            while (isRunning()) {
-	                synchronized (this) {
-	                    try {
-	                        Log.d(TAG, "Waiting for " + timeIntervalMillis + " millis");
-	                        wait(timeIntervalMillis);
-	                    } catch (Exception e) {
-	                        Log.e(TAG, e.getMessage());
-	                    }
-	                }
-	                addCurrentLocationToQueue();
+	            long configuredTimeIntervalMillis = configuration.getTimeInterval() * 1000;
 
-	                Location queuedLocation = getFirstLocationFromQueue();
-	                while(queuedLocation != null) {
+	            // until the first fix we wait only 500ms until we check again for a fix
+	            long timeIntervalMillis = 500;
+	            
+	            while (isRunning()) {
+	                if(this.currentLocation != null) {
 	                    try {
-	                        String postResponseString = postLocation(queuedLocation);
+	                        long beforePostMillis = System.currentTimeMillis();
+	                        
+	                        String postResponseString = postLocation(this.currentLocation);
 	                        PostResponse response = new PostResponse(postResponseString);
-	                        
-	                        // the server may change the min time interval at any time - make sure we use it
-	                        configuration.setMinTimeInterval(response.getMinTimeInterval());
-	                        
+
+	                        // don't use the timestamp of location since there is an offset between
+	                        // times when locations are received and times when locations are posted
+	                        // even though both use the same interval length
+	                        // -> Users most likely would like to see the time when the location has been posted!
+	                        lastTimePosted = System.currentTimeMillis();
 	                        locationsSent++;
-	                        lastTimePosted = queuedLocation.getTime();
+	                        
+	                        // the server may change the min time interval at any
+	                        // time - make sure we use it
+	                        configuration.setMinTimeInterval(response.getMinTimeInterval());
+
 	                        updateDisplay(locationsSent, lastTimePosted, response.getTrackerCount());
 	                        
-	                        removeFirstLocationFromQueue();
-	                        queuedLocation = getFirstLocationFromQueue();
+	                        // we don't wait for the configured time interval but subtract the time already spent for posting the location
+	                        timeIntervalMillis = configuredTimeIntervalMillis - (System.currentTimeMillis() - beforePostMillis);
 	                    } catch (Exception e) {
 	                        Log.e(TAG, e.getMessage());
-	                        queuedLocation = null;
 	                    }
 	                }
+                    
+                    synchronized (this) {
+                        try {
+                            Log.d(TAG, "Waiting for " + timeIntervalMillis + " millis");
+                            wait(timeIntervalMillis);
+                        } catch (Exception e) {
+                            Log.e(TAG, e.getMessage());
+                        }
+                    }
 	            }
 		    }
 		    catch(Exception e) {
