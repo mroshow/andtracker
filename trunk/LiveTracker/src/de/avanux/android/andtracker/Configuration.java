@@ -50,6 +50,7 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
 	
 	public Configuration(String propertiesString) throws IOException {
 		super(propertiesString);
+		this.timeInterval = getDefaultTimeInterval();
         this.minTimeInterval = Long.parseLong(getProperties().getProperty(ConfigurationConstants.MIN_TIME_INTERVAL));
 	}
 
@@ -110,8 +111,11 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
 	}
 	
 	public void setTimeInterval(SharedPreferences sharedPreferences) {
-        setTimeInterval(Long.parseLong(sharedPreferences.getString(timeIntervalPreferenceKey, "" + getDefaultTimeInterval())));
+	    if(getTransmissionMode(sharedPreferences) == TransmissionMode.MANUAL) {
+	        setTimeInterval(Long.parseLong(sharedPreferences.getString(timeIntervalPreferenceKey, "" + getDefaultTimeInterval())));
+	    }
 	}
+	
 	
 
     /**
@@ -161,6 +165,10 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
 	//
     // ~ Preferences ----------------------------------------------------------------------------------------------------
 	//
+
+    private TransmissionMode getTransmissionMode(SharedPreferences sharedPreferences) {
+        return TransmissionMode.valueOf(sharedPreferences.getString(transmissionModeKey, TransmissionMode.REALTIME.toString()));
+    }
 	
 	public static void setTransmissionModeKey(String transmissionModeKey) {
         Configuration.transmissionModeKey = transmissionModeKey;
@@ -185,14 +193,13 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
         else if(key.equals(transmissionModeKey)) {
             // preferences should always contain manual values in order to preserve them when switching between the transmission mode;
             // if transmission mode gets set to real-time only the configuration gets set to default time interval/default distance; preference values remain unchanged
-            TransmissionMode transmissionMode = TransmissionMode.valueOf(sharedPreferences.getString(transmissionModeKey, TransmissionMode.REALTIME.toString()));
-            if(TransmissionMode.REALTIME.equals(transmissionMode)) {
-                setTimeInterval(getDefaultTimeInterval());
-                setDistance(getDefaultDistance());
-            }
-            else {
+            if(getTransmissionMode(sharedPreferences) == TransmissionMode.MANUAL) {
                 setTimeInterval(sharedPreferences);
                 setDistance(sharedPreferences);
+            }
+            else {
+                setTimeInterval(getDefaultTimeInterval());
+                setDistance(getDefaultDistance());
             }
         }
     }
