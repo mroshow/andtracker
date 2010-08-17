@@ -57,23 +57,23 @@ public class Configuration extends PropertiesStringParser implements OnSharedPre
 	public static String getServerBaseUrl() {
         // FIXME: this is a hack during main development phase to switch easily between development server and deployment server
 	    if(serverBaseUrl == null) {
-	        final String developmentHostName = "miraculix.localnet";
-	        String developmentHostAddress = null;
-	        try {
-	            InetAddress addr = InetAddress.getByName(developmentHostName);
-	            if(addr != null) {
-	                Log.d(TAG, "Getting IP address for " + developmentHostName);
-	                developmentHostAddress = addr.getHostAddress();
-	                if(developmentHostAddress.equals("192.168.70.5")) {
-	                    serverBaseUrl = "http://miraculix.localnet:8080/LiveTrackerServer";
-	                }
-	            }
-	        } catch (UnknownHostException e) {
-	            // ignore
-	        }
-	        if(serverBaseUrl == null) {
+//	        final String developmentHostName = "miraculix.localnet";
+//	        String developmentHostAddress = null;
+//	        try {
+//	            InetAddress addr = InetAddress.getByName(developmentHostName);
+//	            if(addr != null) {
+//	                Log.d(TAG, "Getting IP address for " + developmentHostName);
+//	                developmentHostAddress = addr.getHostAddress();
+//	                if(developmentHostAddress.equals("192.168.70.5")) {
+//	                    serverBaseUrl = "http://miraculix.localnet:8080/LiveTrackerServer";
+//	                }
+//	            }
+//	        } catch (UnknownHostException e) {
+//	            // ignore
+//	        }
+//	        if(serverBaseUrl == null) {
 	            serverBaseUrl = "http://livetracker.dyndns.org";
-	        }
+//	        }
 	        Log.d(TAG, "serverBaseUrl=" + serverBaseUrl);
 	    }
 	    return serverBaseUrl;

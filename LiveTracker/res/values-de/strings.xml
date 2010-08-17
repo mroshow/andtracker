@@ -83,6 +83,7 @@ Sie sollten ein Exemplar der GNU General Public License zusammen mit diesem Prog
 
     <string name="toast_serverNotAvailable">Der Server ist nicht erreichbar.</string>
     <string name="toast_versionCodeMismatch">Die installierte LiveTracker-Version ist nicht kompatibel mit dem Server. Bitte aktualisieren Sie Ihre LiveTracker-Version.</string>
+    <string name="toast_GpsNotAvailable">GPS muss aktiviert werden, bevor LiverTracker gestarted wird.</string>
     <string name="toast_timeIntervalValueInvalid">Der Zeitinterval muß einen Wert haben von mindestens</string>
     <string name="toast_distanceValueInvalid">Die Entfernung muß einen Wert haben von mindestens</string>
 
