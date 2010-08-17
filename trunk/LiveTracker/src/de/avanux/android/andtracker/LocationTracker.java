@@ -59,7 +59,6 @@ public class LocationTracker extends Service implements LocationListener {
     private LocationHandler locationHandler;
     
 
-
 	//~ Life cycle callbacks -------------------------------------------------------------------------------------------
     
 	@Override
@@ -85,20 +84,8 @@ public class LocationTracker extends Service implements LocationListener {
         thread = new Thread(this.locationHandler);
         thread.setName("LocationHandler");
         thread.start();
-        
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        
-        Criteria criteria = new Criteria();
-        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-        criteria.setAltitudeRequired(false);
-        criteria.setBearingRequired(false);
-        criteria.setCostAllowed(false);
-        // criteria.setPowerRequirement(Criteria.POWER_LOW);
-        criteria.setSpeedRequired(true);
-        
-        String provider = locationManager.getBestProvider(criteria, true);
-        // FIXME: use configured values but respect server minimums
-        locationManager.requestLocationUpdates(provider, configuration.getTimeInterval() * 1000, configuration.getDistance(), this);
+
+        getLocationManager().requestLocationUpdates(getGpsProvider(), configuration.getTimeInterval() * 1000, configuration.getDistance(), this);
 	}
 	
 	public void stop() {
@@ -127,6 +114,25 @@ public class LocationTracker extends Service implements LocationListener {
 
 	
 	//~ Location handling ----------------------------------------------------------------------------------------------
+
+	private LocationManager getLocationManager() {
+		if(locationManager == null) {
+	        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+		}
+		return locationManager;
+	}
+	
+	public String getGpsProvider() {
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        criteria.setAltitudeRequired(false);
+        criteria.setBearingRequired(false);
+        criteria.setCostAllowed(false);
+        // criteria.setPowerRequirement(Criteria.POWER_LOW);
+        criteria.setSpeedRequired(true);
+		
+        return getLocationManager().getBestProvider(criteria, true);
+	}
 	
 	@Override
 	public void onLocationChanged(Location location) {

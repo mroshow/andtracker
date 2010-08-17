@@ -134,21 +134,27 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
                 // let the location tracker know where to send display updates
                 locationTracker.setUpdatableDisplay(getUpdatableDisplay());
 
-                // make sure the location tracker is configured
-                if (getConfiguration() == null) {
-                    if(! isInstanceStateSaved()) {
-                        Log.d(TAG, "Location tracker service is not yet configured.");
-                        new DownloadConfigurationTask().execute(Configuration.getServerBaseUrl() + "/ConfigurationProvider");
-                    }
-                    else {
-                        Log.d(TAG, "Location tracker service is not yet configured but no need to try again after restart.");
-                    }
-                } else {
-                    Log.d(TAG, "Location tracker service is already configured.");
-                    updateTrackingID();
-                    updateLocationsSentCount(locationTracker.getLocationsSent());
-                    updateLastLocationSentTime(locationTracker.getLastTimePosted());
-                    updateButtons();
+                String gpsProvider = locationTracker.getGpsProvider();
+                if(gpsProvider == null || gpsProvider.length() == 0 || ! "gps".equals(gpsProvider)) {
+                	Toast.makeText(LiveTracker.this, getString(R.string.toast_GpsNotAvailable), Toast.LENGTH_LONG).show();
+                }
+                else {
+                    // make sure the location tracker is configured
+                    if (getConfiguration() == null) {
+                        if(! isInstanceStateSaved()) {
+                            Log.d(TAG, "Location tracker service is not yet configured.");
+                            new DownloadConfigurationTask().execute(Configuration.getServerBaseUrl() + "/ConfigurationProvider");
+                        }
+                        else {
+                            Log.d(TAG, "Location tracker service is not yet configured but no need to try again after restart.");
+                        }
+    				} else {
+    					Log.d(TAG, "Location tracker service is already configured.");
+    					updateTrackingID();
+    					updateLocationsSentCount(locationTracker.getLocationsSent());
+    					updateLastLocationSentTime(locationTracker.getLastTimePosted());
+    					updateButtons();
+    				}
                 }
             }
 
@@ -193,7 +199,7 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
         } else {
             if (locationTracker.isRunning()) {
                 Log.d(TAG, "Location tracker service is running - leave it running and send a notification as reminder.");
-                notify(R.string.notification_service_running_in_background, getText(R.string.notification_service_running_in_background));
+                notifyUser(R.string.notification_service_running_in_background, getText(R.string.notification_service_running_in_background));
             } else {
                 Log.d(TAG, "The location tracker service is used but not running - it's safe to stop it.");
                 stopService(new Intent(LiveTracker.this, LocationTracker.class));
@@ -367,7 +373,7 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
             configuration.setDistance(sharedPreferences);
         }
         if (configuration.getMessageToUsers() != null && configuration.getMessageToUsers().length() > 0) {
-            notify(R.string.notification_message_to_users, configuration.getMessageToUsers());
+            notifyUser(R.string.notification_message_to_users, configuration.getMessageToUsers());
         }
     }
 
@@ -418,7 +424,7 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
 
     // ~ Notifications --------------------------------------------------------
 
-    private void notify(int id, CharSequence text) {
+    protected void notifyUser(int id, CharSequence text) {
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, new Intent(this, LiveTracker.class), 0);
 
         Notification notification = new Notification(R.drawable.icon, text, System.currentTimeMillis());

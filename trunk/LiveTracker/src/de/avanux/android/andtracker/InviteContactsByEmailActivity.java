@@ -23,8 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import de.avanux.android.andtracker.R;
+import java.util.Set;
 
 import android.app.Activity;
 import android.app.ExpandableListActivity;
@@ -38,6 +37,7 @@ import android.view.View;
 import android.widget.CheckedTextView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ExpandableListView.OnChildClickListener;
 
 /**
@@ -76,6 +76,10 @@ public class InviteContactsByEmailActivity extends ExpandableListActivity implem
         List<List<Map<String, String>>> children = new ArrayList<List<Map<String, String>>>();
         List<Map<String, String>> emailAddressesOfContact = new ArrayList<Map<String, String>>();
 
+        CharSequence[] emailAddressTypes = getResources().getTextArray(android.R.array.emailAddressTypes);
+
+//        Set<Integer> types = new HashSet<Integer>();
+        
         int previousPersonId = -1;
         Cursor cursor = getContactCursor(this);
         do {
@@ -93,13 +97,36 @@ public class InviteContactsByEmailActivity extends ExpandableListActivity implem
                 }
             }
 
-            int typeOfContactMethod = cursor.getInt(cursor.getColumnIndex(Contacts.ContactMethods.TYPE));
-            int kindOfContactMethod = cursor.getInt(cursor.getColumnIndex(Contacts.ContactMethods.KIND));
+            
             // kindOfContactMethod: 1 represents email address (no constant found yet where this value is defined)
+            int kindOfContactMethod = cursor.getInt(cursor.getColumnIndex(Contacts.ContactMethods.KIND));
             if (kindOfContactMethod == 1) {
                 Map<String, String> emailAddressWithAttributes = new HashMap<String, String>();
                 emailAddressWithAttributes.put(EMAIL_ADDRESS, cursor.getString(cursor.getColumnIndex(Contacts.ContactMethods.DATA)));
-                emailAddressWithAttributes.put(EMAIL_ADDRESS_TYPE, getResources().getTextArray(android.R.array.emailAddressTypes)[typeOfContactMethod - 1].toString());
+                
+                /**
+                 * Unfortunately values of getColumnIndex(Contacts.ContactMethods.TYPE) and android.R.array.emailAddressTypes don't really match
+                 * and have to be mapped therefore:
+                 * 
+                 * Value   emailAddressTypes   getColumnIndex(Contacts.ContactMethods.TYPE)
+                 *   0       HOME                CUSTOM
+                 *   1       WORK                HOME
+                 *   2       OTHER               WORK
+                 *   3       CUSTOM              OTHER
+                 */
+                int typeOfContactMethod = cursor.getInt(cursor.getColumnIndex(Contacts.ContactMethods.TYPE)) - 1;
+                if(typeOfContactMethod == -1) {
+                	typeOfContactMethod = 3;
+                }
+//                types.add(typeOfContactMethod);                
+                
+                if(typeOfContactMethod >= 0 && typeOfContactMethod < emailAddressTypes.length) {
+                    emailAddressWithAttributes.put(EMAIL_ADDRESS_TYPE, emailAddressTypes[typeOfContactMethod].toString());
+                }
+                else {
+                    emailAddressWithAttributes.put(EMAIL_ADDRESS_TYPE, emailAddressTypes[2].toString());
+                }
+                
                 emailAddressesOfContact.add(emailAddressWithAttributes);
             }
 
@@ -107,16 +134,20 @@ public class InviteContactsByEmailActivity extends ExpandableListActivity implem
 
         } while (cursor.moveToNext());
 
+        // FIXME
+//        StringBuilder text = new StringBuilder("types=");
+//        for (Integer type : types) {
+//			text.append(type + " ");
+//		}        
+//        text.append("\n");
+//        for (int i = 0; i < emailAddressTypes.length; i++) {
+//			text.append(i + "=" + emailAddressTypes[i] + " ");
+//		}
+//    	Toast.makeText(InviteContactsByEmailActivity.this, text, Toast.LENGTH_LONG).show();        
+        
+        
         // add the last set of children to the children's list
         children.add(emailAddressesOfContact);
-
-        // find out the indexes of empty children lists and remove them and
-        // their respective groups
-        List indexes = this.findEmptyChildrenLists(children);
-        for (int i = 0; i < indexes.size(); i++) {
-            allContactNamesWithDisplayName.remove(Integer.parseInt(indexes.get(i).toString()));
-            children.remove(Integer.parseInt(indexes.get(i).toString()));
-        }
 
         SimpleExpandableListAdapter adapter = new SimpleExpandableListAdapter(
                 this,
@@ -130,23 +161,6 @@ public class InviteContactsByEmailActivity extends ExpandableListActivity implem
                 new int[] { android.R.id.text1, android.R.id.text2 }
         );
         setListAdapter(adapter);
-    }
-
-    private List findEmptyChildrenLists(List<?> list) {
-        List indexes = new ArrayList();
-        for (int i = 0; i < list.size(); i++) {
-            if (((List<?>) list.get(i)).isEmpty()) {
-                indexes.add(i);
-            }
-        }
-        return indexes;
-    }
-
-    private void removeEmptyGroupsAndChildren(List indexes, List groups, List children) {
-        for (int i = 0; i < indexes.size(); i++) {
-            groups.remove(indexes.get(i));
-            children.remove(indexes.get(i));
-        }
     }
 
     @Override
