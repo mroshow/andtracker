@@ -15,9 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiveTracker.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.avanux.android.andtracker;
+package de.avanux.android.livetracker2;
 
-public enum TransmissionMode {
-    REALTIME,
-    MANUAL
+public interface UpdatableDisplay {
+
+    public void updateLocationsSentCount(Integer count);
+
+    public void updateLastLocationSentTime(Long time);
+    
+    public void updateTrackerCount(Integer count);
+    
 }

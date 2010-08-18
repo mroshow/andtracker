@@ -15,14 +15,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiveTracker.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.avanux.android.andtracker;
+package de.avanux.android.livetracker2;
 
-public interface UpdatableDisplay {
+public class ConfigurationConstants {
 
-    public void updateLocationsSentCount(Integer count);
+    public static final String SERVER_API_VERSION = "serverApiVersion";
 
-    public void updateLastLocationSentTime(Long time);
+    public static final String ID = "id";
+
+    public static final String MIN_TIME_INTERVAL = "minTimeInterval";
+
+    public static final String MESSAGE_TO_USERS = "messageToUsers";
     
-    public void updateTrackerCount(Integer count);
-    
+    public static final String LOCATION_RECEIVER_URL = "locationReceiverUrl";
+	
 }
