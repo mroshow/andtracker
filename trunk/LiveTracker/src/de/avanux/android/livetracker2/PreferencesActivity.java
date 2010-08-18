@@ -15,21 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiveTracker.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.avanux.android.andtracker;
+package de.avanux.android.livetracker2;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import de.avanux.android.andtracker.R;
 
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.preference.Preference.OnPreferenceChangeListener;
 import android.util.Log;
 import android.widget.Toast;
 

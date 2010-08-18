@@ -15,12 +15,10 @@
  * You should have received a copy of the GNU General Public License
  * along with LiveTracker.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.avanux.android.andtracker;
+package de.avanux.android.livetracker2;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import de.avanux.android.andtracker.R;
 
 import android.app.Activity;
 import android.app.Notification;

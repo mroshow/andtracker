@@ -15,24 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiveTracker.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.avanux.android.andtracker;
+package de.avanux.android.livetracker2;
 
-import java.io.IOException;
-
-public class PostResponse extends PropertiesStringParser {
-
-    private static final String TAG = "LiveTracker:PostResponse";
-    
-    public PostResponse(String propertiesString) throws IOException {
-        super(propertiesString);
-    }
-    
-    public long getMinTimeInterval() {
-        return Long.parseLong(getProperties().getProperty(ConfigurationConstants.MIN_TIME_INTERVAL));
-    }
-    
-    public int getTrackerCount() {
-        return Integer.parseInt(getProperties().getProperty("trackerCount"));
-    }
-    
+public enum TransmissionMode {
+    REALTIME,
+    MANUAL
 }
