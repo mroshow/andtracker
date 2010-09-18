@@ -27,7 +27,7 @@
     <string name="label_locationsSentCount">Locations sent</string>
     <string name="field_locationsSentCount">0</string>
     <string name="label_lastLocationSentTime">Last location sent at</string>
-    <string name="field_lastLocationSentTime">none sent</string>
+    <string name="field_lastLocationSentTime">none</string>
     <string name="label_trackerCount">Number of trackers</string>
     <string name="field_trackerCount">0</string>
     

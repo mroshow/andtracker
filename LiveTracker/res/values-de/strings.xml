@@ -27,8 +27,8 @@
     <string name="label_locationsSentCount">Positionsmeldungen</string>
     <string name="field_locationsSentCount">0</string>
     <string name="label_lastLocationSentTime">letzte gesendet um</string>
-    <string name="field_lastLocationSentTime">noch keine</string>
-    <string name="label_trackerCount">Anzahl der Zuschauer</string>
+    <string name="field_lastLocationSentTime">keine</string>
+    <string name="label_trackerCount">Zuschauer</string>
     <string name="field_trackerCount">0</string>
     
     <string name="button_start">Start</string>

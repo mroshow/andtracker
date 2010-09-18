@@ -19,6 +19,7 @@
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/layout_main"
+    android:screenOrientation="portrait"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -49,8 +50,8 @@
     <RelativeLayout
         android:id="@+id/layout_locationsSentCount"
         android:layout_width="fill_parent"
-        android:layout_height="80dip"
-        android:paddingTop="30dip"
+        android:layout_height="60dip"
+        android:paddingTop="10dip"
         >
         <TextView
             android:id="@+id/label_locationsSentCount"
@@ -60,7 +61,7 @@
             android:layout_centerVertical="true"
             android:width="220dip"
             android:paddingLeft="20dip"
-            android:textSize="18dip"
+            android:textSize="18dip" 
         />
         <TextView
             android:id="@+id/field_locationsSentCount"
@@ -75,8 +76,8 @@
     <RelativeLayout
         android:id="@+id/layout_lastLocationSentTime"
         android:layout_width="fill_parent"
-        android:layout_height="80dip"
-        android:paddingTop="30dip"
+        android:layout_height="60dip"
+        android:paddingTop="10dip"
         >
         <TextView
             android:id="@+id/label_lastLocationSentTime"
@@ -86,7 +87,7 @@
             android:layout_centerVertical="true"
             android:width="220dip"
             android:paddingLeft="20dip"
-            android:textSize="18dip"
+            android:textSize="18dip" 
         />
         <TextView
             android:id="@+id/field_lastLocationSentTime"
@@ -101,8 +102,8 @@
     <RelativeLayout
         android:id="@+id/layout_trackerCount"
         android:layout_width="fill_parent"
-        android:layout_height="80dip"
-        android:paddingTop="30dip"
+        android:layout_height="60dip"
+        android:paddingTop="10dip"
     >
         <TextView
             android:id="@+id/label_trackerCount"
@@ -112,7 +113,7 @@
             android:layout_centerVertical="true"
             android:width="220dip"
             android:paddingLeft="20dip"
-            android:textSize="18dip"
+            android:textSize="18dip" 
         />
         <TextView
             android:id="@+id/field_trackerCount"
@@ -160,6 +161,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
+            android:textSize="14dip"
         />
     </RelativeLayout>
     <RelativeLayout
@@ -173,8 +175,9 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:autoLink="all"
+            android:autoLink="web"
             android:linksClickable="true"
+            android:textSize="14dip"
         />
     </RelativeLayout>
 </LinearLayout>
