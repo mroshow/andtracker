@@ -194,15 +194,16 @@ public class LiveTracker extends Activity implements UpdatableDisplay {
         
         if (this.instanceStateSaved) {
             Log.d(TAG, "We are going to be suspended temporarily (e.g. display orientation changed or keypad (de-)activated).");
-        } else {
-            if (locationTracker.isRunning()) {
-                Log.d(TAG, "Location tracker service is running - leave it running and send a notification as reminder.");
-                notifyUser(R.string.notification_service_running_in_background, getText(R.string.notification_service_running_in_background));
-            } else {
-                Log.d(TAG, "The location tracker service is used but not running - it's safe to stop it.");
-                stopService(new Intent(LiveTracker.this, LocationTracker.class));
-            }
-        }
+		} else {
+			if (locationTracker != null && locationTracker.isRunning()) {
+				Log.d(TAG, "Location tracker service is running - leave it running and send a notification as reminder.");
+				notifyUser(R.string.notification_service_running_in_background,
+						getText(R.string.notification_service_running_in_background));
+			} else {
+				Log.d(TAG, "The location tracker service is used but not running - it's safe to stop it.");
+				stopService(new Intent(LiveTracker.this, LocationTracker.class));
+			}
+		}
     }
     
     @Override
