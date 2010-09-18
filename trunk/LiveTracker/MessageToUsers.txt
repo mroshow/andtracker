@@ -1,1 +1,1 @@
-For bug fixes please uninstall LiveTracker and install again from Android market.
+For bug fixes uninstall LiveTracker and install again from Android market.
